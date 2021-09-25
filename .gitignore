@@ -1,0 +1,4 @@
+/target/*
+/download/*
+/.vscode/*
+/.DS_Store

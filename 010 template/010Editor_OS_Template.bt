@@ -1,0 +1,80 @@
+
+// 010 Editor v12.0 Binary Template
+// for OSTerrain50 custom binary data
+// Revision 2.0 21-Sep-2021
+
+LittleEndian();
+
+typedef struct {
+    char sig[11];
+} FILE_SIG <fgcolor=cRed, comment="Contains file signature">;
+
+typedef struct {
+    char gridLetters[2];
+} OS_GRID_IDENTIFIER <bgcolor=cLtGreen, comment="Contains OS Grid identifier">;
+
+// Custom 4 byte int type with associated colouring function
+// to display all null address values with a white background
+// and all non-null address values with a gray background
+typedef int32 AddressInt <bgcolor=fnColour>;
+int32 fnColour(AddressInt &var) {
+    if(var == 0)
+        return cWhite;
+    else
+        return cLtGray;
+}
+
+typedef struct {
+    AddressInt address <comment="Data address">;
+} HEADER_SECTION <comment="Contains elevation data address">; 
+
+typedef struct {  
+    int16 dataValues[40000] <comment="Elevation data value (x10)">;
+} ELEVATIONS <comment="Contains 40000 data values">; 
+
+
+// Start of the file
+FILE_SIG sig;
+
+// Next is the header section which contains 91 x 402 byte sections for 
+// each of the 7 x 13 100km² grids which (may) contain elevation data.
+// It starts at the south west corner then goes east then north, i.e.
+// from      SV, SW, ... TW 
+// then      SQ, SR, ... TR
+// ...
+// ending at HL, HM, ... JM
+
+local int i;
+local int j;
+for (i = 0; i < 91; i++) {
+
+    OS_GRID_IDENTIFIER identifer;
+
+    // Now come the data addresses for each of the 100 10km² sub-grids within the parent
+    // grid starting at the south west corner then going east then north, i.e. 
+    // from      00, 10, 20, ... 90
+    // then      01, 11, 21, ... 91
+    // ...
+    // ending at 09, 19, 29, ... 99
+
+    for (j = 0; j < 100; j++) {
+
+        HEADER_SECTION header_section;
+    }
+}
+
+// Next is the data section containing the elevation values. The data has had the
+// single decimal place shifted once rightwards to allow storage as a 2 byte short int
+// so that each stored value is 10 x the actual elevation in metres.
+
+local int k;
+for (k = 0; !FEof(); k++) {
+
+    // alternating colours for each set of 40000 elevations
+    if (k % 2 == 0)
+        SetBackColor(cLtAqua);
+    else
+        SetBackColor(cSilver);
+
+    ELEVATIONS data;
+}
