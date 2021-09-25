@@ -13,7 +13,7 @@ fn main() {
     }
 
     if args.len() == 3 && &args[1] == "-nounzip"{
-        binaryfile::build_binary_file(&args[1]);
+        binaryfile::build_binary_file(&args[2]);
     }
     else if args.len() == 2 {
 
