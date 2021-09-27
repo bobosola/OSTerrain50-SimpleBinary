@@ -1,4 +1,4 @@
-use std::{process, io, fs, path};
+use std::{process, io, env, fs, path};
 use std::error::Error;
 use indicatif::{ProgressBar, ProgressStyle};
 use walkdir::{WalkDir};
@@ -7,7 +7,34 @@ use walkdir::{WalkDir};
     All the zip-related code
 */
 
-pub fn unzip(
+pub fn unzip_os_file(file_path: &path::Path) -> Result<path::PathBuf, Box<dyn Error>>{
+
+    // The OS zip will be extracted to a directory named the same
+    // as the zip file (minus the extension) in the application directory
+    let extract_dir_name  = file_path.file_stem().unwrap();
+
+    eprintln!("Extracting {}", file_path.to_str().unwrap());        
+    eprintln!("Extraction directory is {:?}", extract_dir_name);  
+
+    let current_dir = env::current_dir().unwrap(); 
+    let count = unzip(file_path, &current_dir, true)?;
+    eprintln!("Extraction contains {} child zips", count);
+
+    // Inside the extraction directory is a subdirectory called "data" which contains
+    // subdirectories named as per all the OS grids (SV, SW, ...). These each contain
+    // a variable number of child data zips from 0 to 100
+
+    const DATA_DIR: &str = "data";
+    let data_path = current_dir.join(extract_dir_name).join(DATA_DIR);    
+
+    // now we can unzip all the child zips inside their parent grid directories
+    let count = unzip_subdirs(&data_path)?;
+    eprintln!("Extracted {} zip files", count);
+
+    Ok(data_path )
+}
+
+fn unzip(
     source_path: &path::Path,
     dest_path: &path::Path,    
     show_progress_bar: bool
@@ -72,7 +99,7 @@ pub fn unzip(
 
 pub fn unzip_subdirs(data_dir: &path::Path) -> Result<u64, Box<dyn Error>> {
 
-    // Recursively examin all subdirectories and unzip each file
+    // Examine all subdirectories and unzip each file
     // deleting the zip on completion
 
     eprintln!("data dir: {}", data_dir.display());

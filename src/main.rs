@@ -1,55 +1,86 @@
 mod zip;
 mod binaryfile;
 
-use std::{process, path, env};
+use std::{process, path, env, string};
+use std::error::Error;
+
+struct ArgsType {
+    zip_file: Option<path::PathBuf>,
+    extracted_dir: Option<path::PathBuf>,
+}
 
 fn main() {
 
     let args: Vec<_> = env::args().collect();
+    match args_check(&args){
+        Ok(args) => {
+            match args.zip_file {
+            // Argument is a zip file, so unzip it and all child zips                
+                Some(f) => {             
+                    match zip::unzip_os_file(&f) { 
+                        // The unzipping returns the data files directory path
+                        // so we can now build the output binary
+                        Ok(data_dir) => binaryfile::build_output_file(&data_dir),
+                        Err(e) => {
+                            eprintln!("Error: {:?},", e);
+                            process::exit(1);
+                        }
+                    }
+                }
+                None => ()
+            }
+            match args.extracted_dir{
+            // Argument is a directory assumed to contain unzipped data files
+            // so try to build the output binary                        
+                Some(data_dir) => {
+                    binaryfile::build_output_file(&data_dir);
+                }
+                None => ()
+            }
+        }         
+        Err(err) => {
+            eprintln!("Error: {:?}", err);
+            process::exit(1);
+        }
+    } 
+}
+
+fn args_check(args: &Vec<string::String>) -> Result<ArgsType, Box<dyn Error>> {
+
     if args.len() < 2 {
-        eprintln!("Usage 1: {} <OSTerrain50 zip file>", args[0]);
-        eprintln!("Usage 2: {} -nounzip <'data' dir containing subdirectories of unzipped files>", args[0]);     
-        process::exit(1);
+        eprint!("
+Usage:
+1) {} <OS zip file> : Unzips the OS data file and creates the binary output file
+2) {} <directory>   : Creates the binary output file where <directory> contains
+the unzipped OS data files
+
+", args[0], args[0]);
+       Err("Incorrect arguments")?
     }
 
-    if args.len() == 3 && &args[1] == "-nounzip"{
-        binaryfile::build_binary_file(&args[2]);
+    let mut args_type = ArgsType {
+        zip_file: None,
+        extracted_dir: None,
+    };    
+
+    if args.len() == 2 {
+        let args_path = path::Path::new(&args[1]); 
+        if args_path.is_file() {
+            match args_path.to_str() {
+                Some(file) => {
+                    if file.ends_with(".zip") {
+                        args_type.zip_file = Some(args_path.to_path_buf());
+                    }
+                    else {
+                        Err("The file is not a zip file")?
+                    }
+                }
+                None => Err("The file name is not a valid string")?
+            };        
+        }
+        if args_path.is_dir() {
+            args_type.extracted_dir = Some(args_path.to_path_buf());
+        }      
     }
-    else if args.len() == 2 {
-
-        // The OS zip will be extracted to a directory named the same
-        // as the zip file (minus the extension) in the application directory
-        let os_zip_file_path = path::Path::new(&args[1]);    
-        let extract_dir_name  = os_zip_file_path.file_stem().unwrap(); 
-
-        eprintln!("Extracting {}", os_zip_file_path.to_str().unwrap());        
-        eprintln!("Extraction directory is {}", extract_dir_name.to_str().unwrap());    
-
-        let current_dir = env::current_dir().unwrap(); 
-        let result = zip::unzip(os_zip_file_path, &current_dir, true);
-        match result {
-            Ok(count) => eprintln!("Extraction contains {} child zips", count),
-            Err(error) => {
-                eprintln!("Error: {}", error);
-                process::exit(1);
-            }
-        };
-
-        // Inside the main directory is a subdirectory called "data" which contains
-        // all the subdirectories named as per OS grids (SV, SW etc.). These contain
-        // a variable number of child data zips for that grid
-
-        const DATA_DIR: &str=  "data";
-        let data_path = current_dir.join(extract_dir_name).join(DATA_DIR);    
-
-        // now we can unzip all the child zips
-        let result = zip::unzip_subdirs(&data_path);
-        match result {
-            Ok(count) => eprintln!("Extracted {} zip files", count),
-            Err(error) => {
-                eprintln!("Error: {}", error);
-                process::exit(1);
-            }
-        };
-    }
+    Ok(args_type)
 }
