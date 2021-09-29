@@ -6,7 +6,7 @@ use std::{env, error::Error, path, process, string};
 // Converts Ordnance Survey 'OS Terrdata 50' ASCII data to a binary format
 // Args are either:
 // - an OS data zip file containing the zipped elevation data, or
-// - a directory containing unzipped elevation data files
+// - a directory containing already-unzipped elevation data
 
 struct ArgsTypes {
     zip_file: Option<path::PathBuf>,
@@ -16,26 +16,34 @@ struct ArgsTypes {
 fn main() {
 
     let args: Vec<_> = env::args().collect();
+    // Sanity-check the supplied args
     match args_check(&args) {
         Ok(args) => {
             let mut data_dir = path::PathBuf::new();
+            // Got a zip file as args, so unzip it in its current directory            
             match args.zip_file {
                 Some(filepath) => {
-                    // Got a zip file, so unzip it and obtain the data files directory
-                    match unzip::unzip_os_file(&filepath) {
-                        Ok(dir) => data_dir = dir,
-                        Err(e) => die(&e),
+                    match get_parent_dir(&filepath){
+                        Ok(parent) => {  
+                            // Unzipping returns the topmost directory of the unzipped archive                    
+                            match unzip::unzip_os_file(&filepath, &parent) {
+                                Ok(unzipped_top_dir) => data_dir = unzipped_top_dir,
+                                Err(e) => die(&e)
+                            }
+                        }
+                        Err(e) => die(&e)
                     }
                 }
-                _ => (),
+                _ => ()
             }
+            // Got a directory as args (presumed to contain unzipped data)            
             match args.directory {
                 Some(dir) => data_dir = dir,
                 _ => (),
             }
             // Build the output file from the data in the data directory
             match output::build_output_file(&data_dir) {
-                Ok(output_path) => println!("Binary data file: {:?}", output_path),
+                Ok(output_path) => println!("Binary data file {:?} created", output_path),
                 Err(e) => die(&e),
             }
         }
@@ -76,7 +84,7 @@ fn show_args_usage(arg: &str) -> Result<(), Box<dyn Error>>{
     let app_path = path::Path::new(&arg);
     let app_name = app_path.file_name()
         .and_then(|s| s.to_str())
-        .ok_or_else(|| "Could not convert app path to string")?;
+        .ok_or_else(|| "Could not convert app fikle name to string")?;
     eprint!(
 "
 Usage:
@@ -85,6 +93,15 @@ Usage:
 
 " , app_name, app_name);    
     Ok(())
+}
+
+fn get_parent_dir(path: &path::Path) ->  Result<path::PathBuf, Box<dyn Error>>{
+    if let Some(p) = path.parent(){
+        if p.is_dir() {
+            return Ok(p.to_path_buf());
+        }
+    }
+    Err("Could not get parent directory")?
 }
 
 fn die(err: &Box<dyn Error>) {
