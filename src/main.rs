@@ -1,7 +1,9 @@
 mod output;
 mod unzip;
+mod utils;
+mod os;
 
-use std::{env, error::Error, path, process, string};
+use std::{env, error::Error, path, string};
 
 // Converts Ordnance Survey 'OS Terrdata 50' ASCII data to a binary format
 // Args are either:
@@ -16,22 +18,25 @@ struct ArgsTypes {
 fn main() {
 
     let args: Vec<_> = env::args().collect();
+
     // Sanity-check the supplied args
     match args_check(&args) {
         Ok(args) => {
             let mut data_dir = path::PathBuf::new();
-            // Got a zip file as args, so unzip it in its current directory            
+
+            // If it's a zip file then unzip it in its parent directory            
             match args.zip_file {
                 Some(filepath) => {
-                    match get_parent_dir(&filepath){
+                    match utils::get_parent_dir(&filepath){
                         Ok(parent) => {  
+
                             // Unzipping returns the topmost directory of the unzipped archive                    
                             match unzip::unzip_os_file(&filepath, &parent) {
                                 Ok(unzipped_top_dir) => data_dir = unzipped_top_dir,
-                                Err(e) => die(&e)
+                                Err(e) => utils::die(&e)
                             }
                         }
-                        Err(e) => die(&e)
+                        Err(e) => utils::die(&e)
                     }
                 }
                 _ => ()
@@ -41,13 +46,13 @@ fn main() {
                 Some(dir) => data_dir = dir,
                 _ => (),
             }
-            // Build the output file from the data in the data directory
+            // In both cases then build the output file from the data directory
             match output::build_output_file(&data_dir) {
                 Ok(output_path) => println!("Binary data file {:?} created", output_path),
-                Err(e) => die(&e),
+                Err(e) => utils::die(&e),
             }
         }
-        Err(e) => die(&e)
+        Err(e) => utils::die(&e)
     }
 }
 
@@ -93,18 +98,4 @@ Usage:
 
 " , app_name, app_name);    
     Ok(())
-}
-
-fn get_parent_dir(path: &path::Path) ->  Result<path::PathBuf, Box<dyn Error>>{
-    if let Some(p) = path.parent(){
-        if p.is_dir() {
-            return Ok(p.to_path_buf());
-        }
-    }
-    Err("Could not get parent directory")?
-}
-
-fn die(err: &Box<dyn Error>) {
-    eprintln!("Error: {}", &err);
-    process::exit(1);
 }

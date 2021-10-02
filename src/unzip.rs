@@ -1,7 +1,7 @@
 use std::{error::Error, fs, io, path};
 use walkdir::WalkDir;
 
- // All the code related to unzipping the downloaded OS data file
+ // Code for handling zip files
 
 pub fn unzip_os_file(file_path: &path::Path, target_dir: &path::Path,) -> Result<path::PathBuf, Box<dyn Error>> {
     

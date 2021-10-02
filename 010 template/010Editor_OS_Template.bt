@@ -37,7 +37,7 @@ typedef struct {
 FILE_SIG sig;
 
 // Next is the header section which contains 91 x 402 byte sections for 
-// each of the 7 x 13 100km² grids which (may) contain elevation data.
+// each of the 7 x 13 100kmï¿½ grids which (may) contain elevation data.
 // It starts at the south west corner then goes east then north, i.e.
 // from      SV, SW, ... TW 
 // then      SQ, SR, ... TR
@@ -50,7 +50,7 @@ for (i = 0; i < 91; i++) {
 
     OS_GRID_IDENTIFIER identifer;
 
-    // Now come the data addresses for each of the 100 10km² sub-grids within the parent
+    // Now come the data addresses for each of the 100 10kmï¿½ sub-grids within the parent
     // grid starting at the south west corner then going east then north, i.e. 
     // from      00, 10, 20, ... 90
     // then      01, 11, 21, ... 91
