@@ -5,11 +5,8 @@ use walkdir::WalkDir;
 
 pub fn unzip_os_file(file_path: &path::Path, target_dir: &path::Path,) -> Result<path::PathBuf, Box<dyn Error>> {
     
-    println!(
-        "Extracting {}", file_path.to_str()
-        .ok_or_else(|| "Zip file path is an invalid string")?
-    ); 
-    let unzipped_top_dir = unzip(file_path, &target_dir)?;
+    println!("Extracting {}", file_path.to_str().ok_or("Zip file path is an invalid string")?); 
+    let unzipped_top_dir = unzip(file_path, target_dir)?;
 
     // Unzip all the nested child zips inside their parent directories   
     let count = unzip_subdirs(&unzipped_top_dir)?;
@@ -18,7 +15,7 @@ pub fn unzip_os_file(file_path: &path::Path, target_dir: &path::Path,) -> Result
     Ok(unzipped_top_dir)
 }
 
-fn unzip( source: &path::Path, target_dir: &path::Path ) -> Result<path::PathBuf, Box<dyn Error>> {
+fn unzip(source: &path::Path, target_dir: &path::Path ) -> Result<path::PathBuf, Box<dyn Error>> {
 
     // Modified from demo code at https://github.com/zip-rs/zip/blob/master/examples/extract.rs
 
@@ -92,19 +89,15 @@ fn unzip_subdirs(data_dir: &path::Path) -> Result<u64, Box<dyn Error>> {
         let found_object = de.path();
 
         if is_zip_file(found_object) { 
-
             println!("Extracting {}", found_object.display());
-
-            let zip_dir = found_object.parent()
-                .ok_or_else(|| "Could not determine parent")?;
-
-            let result = unzip(found_object, &zip_dir);
-            match result {
+            let zip_dir = found_object.parent().ok_or("Could not determine parent")?;
+            let outcome = unzip(found_object, zip_dir);
+            match outcome {
                 Ok(_) => {
                     unzip_count += 1;
                     fs::remove_file(found_object)?;
                 }
-                Err(err) => Err(err)?
+                Err(err) => return Err(err)
             };
         }
     }
@@ -112,17 +105,12 @@ fn unzip_subdirs(data_dir: &path::Path) -> Result<u64, Box<dyn Error>> {
 }
 
 pub fn is_zip_file(path: &path::Path) -> bool {
+
     let has_zip_suffix = match path.to_str() {
-        Some(path) => {
-            if path.ends_with(".zip") {
-                true
-            }
-            else {
-                false
-            }
-        }
+        Some(path) => path.ends_with(".zip"),
         None => false
     };
+    
     if has_zip_suffix && path.is_file() {
         return true;
     }

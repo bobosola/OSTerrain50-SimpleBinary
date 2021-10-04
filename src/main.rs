@@ -4,8 +4,10 @@ mod utils;
 mod os;
 
 use std::{env, error::Error, path, string};
+use std::time::Instant;
 
 // Converts Ordnance Survey 'OS Terrdata 50' ASCII data to a binary format
+
 // Args are either:
 // - an OS data zip file containing the zipped elevation data, or
 // - a directory containing already-unzipped elevation data
@@ -18,45 +20,45 @@ struct ArgsTypes {
 fn main() {
 
     let args: Vec<_> = env::args().collect();
+    let start_time = Instant::now();
 
     // Sanity-check the supplied args
     match args_check(&args) {
         Ok(args) => {
-            let mut data_dir = path::PathBuf::new();
 
-            // If it's a zip file then unzip it in its parent directory            
-            match args.zip_file {
-                Some(filepath) => {
-                    match utils::get_parent_dir(&filepath){
-                        Ok(parent) => {  
-
-                            // Unzipping returns the topmost directory of the unzipped archive                    
-                            match unzip::unzip_os_file(&filepath, &parent) {
-                                Ok(unzipped_top_dir) => data_dir = unzipped_top_dir,
-                                Err(e) => utils::die(&e)
-                            }
+            // If it's a zip file, unzip it in its parent directory
+            // and return the path to the unzipped files directory      
+            let mut data_dir = path::PathBuf::new(); 
+            
+            if let Some(zipfile) = args.zip_file {
+                match utils::get_parent_dir(&zipfile){
+                    Ok(parent) => {                  
+                        match unzip::unzip_os_file(&zipfile, &parent) {
+                            Ok(unzipped_top_dir) => data_dir = unzipped_top_dir,
+                            Err(e) => utils::die(e)
                         }
-                        Err(e) => utils::die(&e)
                     }
-                }
-                _ => ()
+                    Err(e) => utils::die(e)
+                }                
             }
-            // Got a directory as args (presumed to contain unzipped data)            
-            match args.directory {
-                Some(dir) => data_dir = dir,
-                _ => (),
-            }
-            // In both cases then build the output file from the data directory
+
+            // Got a directory as args (presumed to contain unzipped data)  
+            if let Some(dir) =  args.directory {
+                data_dir = dir;
+            }         
+
+            // Build the output file from the data directory
             match output::build_output_file(&data_dir) {
                 Ok(output_path) => println!("Binary data file {:?} created", output_path),
-                Err(e) => utils::die(&e),
+                Err(e) => utils::die(e),
             }
         }
-        Err(e) => utils::die(&e)
+        Err(e) => utils::die(e)
     }
+    println!("Completed in {:.2?} seconds.", start_time.elapsed());
 }
 
-fn args_check(args: &Vec<string::String>) -> Result<ArgsTypes, Box<dyn Error>> {
+fn args_check(args: &[string::String]) -> Result<ArgsTypes, Box<dyn Error>> {
     
     let mut args_types = ArgsTypes {
         zip_file: None,
@@ -72,13 +74,13 @@ fn args_check(args: &Vec<string::String>) -> Result<ArgsTypes, Box<dyn Error>> {
             args_types.directory = Some(arg.to_path_buf());
         }
         else {
-            Err("The argument was not a valid zip file or directory")?
+            return Err("The argument was not a valid zip file or directory".into())
         }
     }
 
     if args_types.directory == None && args_types.zip_file == None {
         show_args_usage(&args[0])?;
-        Err("Invalid or missing argument")?
+        return Err("Invalid or missing argument".into())
     }
     Ok(args_types)
 }
@@ -89,7 +91,7 @@ fn show_args_usage(arg: &str) -> Result<(), Box<dyn Error>>{
     let app_path = path::Path::new(&arg);
     let app_name = app_path.file_name()
         .and_then(|s| s.to_str())
-        .ok_or_else(|| "Could not convert app fikle name to string")?;
+        .ok_or( "Could not convert app fikle name to string")?;
     eprint!(
 "
 Usage:
