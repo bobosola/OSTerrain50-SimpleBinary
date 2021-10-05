@@ -15,7 +15,7 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
     let output_file = utils::get_parent_dir(data_dir)?.join(path::Path::new(os::OUTPUT_FILE_NAME));
     let file = fs::File::create(&output_file)?;
 
-    // Buffer the file write
+    // Buffer the file write for a big speed increase
     let mut file_buffer = BufWriter::new(file);
 
     // Now write out the file header section.
@@ -42,17 +42,18 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
 
     // Create the header section
     
-    // Write out the file signature
+    // Write the file signature
     file_buffer.write_all(os::FILE_SIG)?;
 
-    // Write out the grid identifier then leave room for the 
-    // mazimimum possible number of data addresses which will be populated later. 
+    // Write the grid identifiers leaving room for the maximimum possible
+    // number of data addresses which will be populated later. 
     for grid in os::GRID_100.iter() {
         file_buffer.write_all(grid.as_bytes())?; 
         file_buffer.seek(SeekFrom::Current(os::MAX_NUM_DATA_FILES * os::ADDRESS_LENGTH))?;             
     }
     
-    // End of header section (for now), so the data files can now be parsed and written out
+    // End of header section (for now), so the data files can now be parsed and written
+    // from this file location onwards 
 
     let mut file_count = 0;
     for grid in os::GRID_100.iter() {
@@ -70,20 +71,21 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
         }
 
         // Calculate the numeric part of data file name for each of the possible data files
-        // from E to E and N to S ('HP00.asc', HP01.asc' etc.).
+        // from E to W and N to S (e.g. xx00, xx10, xx20 etc.).
         let mut file_identifers: Vec<String> = Vec::new();
-        for first_num in 0..os::ROWS_IN_10_GRID {
-            for second_num in 0..os::ROWS_IN_10_GRID {
-                file_identifers.push(format!("{}{}", second_num, first_num))
+        for northing in 0..os::ROWS_IN_10_GRID {
+            for easting in 0..os::ROWS_IN_10_GRID {
+                file_identifers.push(format!("{}{}", easting, northing))
             }
         }
-
         for file_num in file_identifers {
 
+            // Combine with the directory name to get e.g. 'hp01'
             let file_name = format!("{}{}", dir_name, file_num);
 
-            // Check the file exists
+            // Add the suffix and check the file exists
             let file_path = match_dir.join(&format!("{}{}", file_name, os::FILE_SUFFIX));
+
             if !file_path.is_file() {
                 continue;
             }
@@ -94,19 +96,24 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
             let file_pointer = file_buffer.seek(SeekFrom::Current(0))?;  
             offsets.insert(file_name.to_uppercase(), file_pointer);
 
-            // Read the file and split on each file line to get the data rows.
+            // Read the data file and split on each file line to get the data rows.
             // The data is suppled N to S and W to E
             //  │1 2 3       ... 200
             //  |201 202 203 ... 400 
             //	|...             40,000
-            //  └──────────────	
-            // These must be reversed to become S to N and W to E
+            //  └──────────────────────
+            // These must be reversed S to N while remaining W to E
             //	|...             40,000
             //  |201 202 203 ... 400
             //  │1 2 3       ... 200
-            //  └──────────────	
+            //  └──────────────────────	
                     
             println!("Processing file {:?}.", file_path);
+
+            // NB: various crates were tried here (e.g. CSV and more) but none easily
+            // supported reversing the data rows and/or had problems with the metadata
+            // lines which are shorter than the data lines. So the parsing is done manually
+            // as below which is performant enough for this use case.
 
             let file_data = fs::read_to_string(file_path)?;
             let mut data_rows: Vec<&str> = file_data.split(os::OS_NEW_LINE).collect();
@@ -140,8 +147,8 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
         }
     }    
   
-    // Now traverse the header section again and write out the starting addresses of
-    // each data block for each grid section
+    // Now re-traverse the header section and write out the saved starting
+    // addresses of each data block for each grid identifier section
 
     // Rewind the file pointer to just past the file sig
     file_buffer.seek(SeekFrom::Start(os::FILE_SIG.len() as u64))?;
@@ -151,9 +158,8 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
         // Jump over the the grid identifier
         file_buffer.seek(SeekFrom::Current(os::GRID_IDENT_LEN))?;
 
-        // Fill the 400 byte header section with the data addresses going from W -> E 
-        // then S -> N for each 4 byte data address for each of the found data files.
-        // Skip over 4 bytes where there is no data file for that area.
+        // Fill the header section with the stored data addresses, leaving
+        // a gap where there is no matching address
 
         for northing in 0..os::ROWS_IN_10_GRID {
             for easting in 0..os::ROWS_IN_10_GRID {
@@ -167,7 +173,7 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
                     file_buffer.write_u32::<LittleEndian>(offsets[&identifier] as u32)?;
                 }
                 else {
-                    // No data for this area so leave a blank entry
+                    // No data for this area so skip over leaving a blank
                     file_buffer.seek(SeekFrom::Current(os::ADDRESS_LENGTH))?;
                 }
             }
