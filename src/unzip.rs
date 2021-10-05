@@ -1,3 +1,4 @@
+use crate::utils;
 use std::{error::Error, fs, io, path};
 use walkdir::WalkDir;
 
@@ -5,13 +6,13 @@ use walkdir::WalkDir;
 
 pub fn unzip_os_file(file_path: &path::Path, target_dir: &path::Path,) -> Result<path::PathBuf, Box<dyn Error>> {
     
-    println!("Extracting {}", file_path.to_str().ok_or("Zip file path is an invalid string")?); 
+    println!("Extracting {}.", file_path.to_str().ok_or("Zip file path is an invalid string")?); 
     let unzipped_top_dir = unzip(file_path, target_dir)?;
 
     // Unzip all the nested child zips inside their parent directories   
     let count = unzip_subdirs(&unzipped_top_dir)?;
   
-    println!("Extracted {} zip files", count);
+    println!("Extracted {} zip files.", utils::format_int(count as isize));
     Ok(unzipped_top_dir)
 }
 
@@ -89,7 +90,7 @@ fn unzip_subdirs(data_dir: &path::Path) -> Result<u64, Box<dyn Error>> {
         let found_object = de.path();
 
         if is_zip_file(found_object) { 
-            println!("Extracting {}", found_object.display());
+            println!("Extracting {}.", found_object.display());
             let zip_dir = found_object.parent().ok_or("Could not determine parent")?;
             let outcome = unzip(found_object, zip_dir);
             match outcome {

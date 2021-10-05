@@ -49,7 +49,7 @@ fn main() {
 
             // Build the output file from the data directory
             match output::build_output_file(&data_dir) {
-                Ok(output_path) => println!("Binary data file {:?} created", output_path),
+                Ok(output_path) => println!("Binary data file {:?} created.", output_path),
                 Err(e) => utils::die(e),
             }
         }
@@ -95,8 +95,8 @@ fn show_args_usage(arg: &str) -> Result<(), Box<dyn Error>>{
     eprint!(
 "
 Usage:
-1) {} <OS zip file> : Unzips OS data file to a data directory and creates binary output file
-2) {} <directory>   : Uses an existing data directory to create binary output file
+1) {} <OS zip file> : Unzips OS data file to a data directory and creates binary output file.
+2) {} <directory>   : Uses an existing data directory to create binary output file.
 
 " , app_name, app_name);    
     Ok(())

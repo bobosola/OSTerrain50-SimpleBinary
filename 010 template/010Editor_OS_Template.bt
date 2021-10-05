@@ -13,25 +13,13 @@ typedef struct {
     char gridLetters[2];
 } OS_GRID_IDENTIFIER <bgcolor=cLtGreen, comment="Contains OS Grid identifier">;
 
-// Custom 4 byte int type with associated colouring function
-// to display all null address values with a white background
-// and all non-null address values with a gray background
-typedef int32 AddressInt <bgcolor=fnColour>;
-int32 fnColour(AddressInt &var) {
-    if(var == 0)
-        return cWhite;
-    else
-        return cLtGray;
-}
-
 typedef struct {
-    AddressInt address <comment="Data address">;
+    int address <comment="Data address">;
 } HEADER_SECTION <comment="Contains elevation data address">; 
 
 typedef struct {  
     int16 dataValues[40000] <comment="Elevation data value (x10)">;
 } ELEVATIONS <comment="Contains 40000 data values">; 
-
 
 // Start of the file
 FILE_SIG sig;
@@ -58,6 +46,10 @@ for (i = 0; i < 91; i++) {
     // ending at 09, 19, 29, ... 99
 
     for (j = 0; j < 100; j++) {
+        if (j % 2 == 0)
+            SetBackColor(cSilver);
+        else
+            SetBackColor(cLtGray);
 
         HEADER_SECTION header_section;
     }

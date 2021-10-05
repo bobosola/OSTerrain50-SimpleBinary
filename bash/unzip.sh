@@ -6,8 +6,7 @@ for d in terr50_gagg_gb/data/*; do
 		(
 		 cd $d
 		 unzip \*.zip
-		 #rm -f *.zip
+		 #rm -f *.zip  # uncomment to delete the zip after unzipping
 		)
     fi; 
 done
-echo "Completed in $SECONDS seconds"
