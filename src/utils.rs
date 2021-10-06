@@ -18,9 +18,9 @@ pub fn get_parent_dir(path: &path::Path) ->  Result<path::PathBuf, Box<dyn Error
     Err("Could not get parent directory".into())
 }
 
+// Formats an integer with commas for readability
 pub fn format_int(int_to_fix: isize) -> string::String {
 
-    // Formats an integer with commas for readability
     let mut output = String::new();
     let int_string = int_to_fix.to_string();
 

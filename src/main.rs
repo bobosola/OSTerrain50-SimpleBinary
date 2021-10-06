@@ -95,8 +95,10 @@ fn show_args_usage(arg: &str) -> Result<(), Box<dyn Error>>{
     eprint!(
 "
 Usage:
-1) {} <OS zip file> : Unzips OS data file to a data directory and creates binary output file.
-2) {} <directory>   : Uses an existing data directory to create binary output file.
+1) {} <OS zip file> : Unzips an OS Terrain 50 data zip file then creates 
+                               a binary data file from the unzipped data directory.
+
+2) {} <directory>   : Creates a binary data file from an OS Terrain 50 data directory.
 
 " , app_name, app_name);    
     Ok(())

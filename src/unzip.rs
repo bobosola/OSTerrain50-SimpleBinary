@@ -18,16 +18,14 @@ pub fn unzip_os_file(file_path: &path::Path, target_dir: &path::Path,) -> Result
 
 fn unzip(source: &path::Path, target_dir: &path::Path ) -> Result<path::PathBuf, Box<dyn Error>> {
 
-    // Modified from demo code at https://github.com/zip-rs/zip/blob/master/examples/extract.rs
-
     let file = fs::File::open(&source)?;
     let mut archive = zip::ZipArchive::new(file)?;
     let mut top_dir = path::PathBuf::new();
 
     for i in 0..archive.len() {
 
-        // The archive entry may contain a directory heirarchy   
-        // to be extracted to, so check any such path is valid, otherwise ignore
+        // The archive entry may contain a directory heirarchy to be extracted to
+        // so check any such path is valid, otherwise ignore
         let mut entry = archive.by_index(i)?;
         let outpath = match entry.enclosed_name() {
             Some(p) => target_dir.join(p.to_owned()),
@@ -79,7 +77,7 @@ fn unzip(source: &path::Path, target_dir: &path::Path ) -> Result<path::PathBuf,
 fn unzip_subdirs(data_dir: &path::Path) -> Result<u64, Box<dyn Error>> {
 
     // Recursively examine all subdirectories and unzip each zip file found
-    // into its containing directory, then delete the zip file.
+    // into its containing directory, then delete the zip file
    
     let walker = WalkDir::new(data_dir).sort_by_file_name().into_iter();
     let mut unzip_count = 0;
