@@ -6,11 +6,11 @@ Why Rust? Because it produces small, cross-platform, very high performance, stan
 
 <h2>What problem does this solve?</h2>
 
-The OS Terrain 50 data is already available in a number of formats, but these are either complex binary formats for consumption by specific software or delivered as thousands of small ASCII CSV-like files which take up around 650MB of storage space and are expensive to parse in real time.
+The OS Terrain 50 data is already available in a number of formats. Most are complex binary formats for consumption by specific software. The only non-binary format is the ASCII Grid format which contains thousands of CSV-like files. These take up around 650MB of storage space and are expensive to parse in real time.
 
 This application will:
 
-* (optionally) unzip the [OS zipped ASCII data zip file](https://osdatahub.os.uk/downloads/open/Terrain50) along with its thousands of child zip files
+* (optionally) unzip the [OS zipped ASCII Grid data zip file](https://osdatahub.os.uk/downloads/open/Terrain50) along with its thousands of child zip files
 * create a space-efficient 229MB simple binary data file using the unzipped OS data
 
 <h2>Usage</h2>
@@ -21,7 +21,7 @@ This application will:
 
 <h2>Reading the binary data file</h2>
 
-PHP demo code to consume the data is available from xxxxx. Why PHP? Because it can run anywhere and is easily readable by anyone familiar with C-ish syntax. The code is heavily commented to allow for translation to any language which supports binary file reads with file pointers. The reading process for a given location requires some simple arithmetic with two file pointer jumps to read the elevation.
+PHP demo code to consume the data is available from the repo [OSTerrain50-PHP](). Why PHP? Because it can run anywhere and is easily readable by anyone familiar with C-ish syntax. The code is heavily commented to allow for translation to any language which supports binary file reads with file pointers.
 
 <h2>Description of the binary file format</h2>
 
@@ -35,16 +35,18 @@ The binary data file consists of:
 * a header section 
 * a data section
 
+Addresses and elevation values are stored in little-endian byte order.
+
 The file sig is``OSTerrain50`` as 11 bytes. This is for simple confirmation of the correct file type.
 
-The header follows the sig. It contains 91 contiguous blocks of 402 bytes, each one representing the full set of 100km² grids from SV to JM, going west to east then south to north as per the OS grid pattern. Each block contains:
+The header follows the sig. It contains 91 contiguous blocks of 402 bytes, each one representing the full set of 100km² grids from SV to JM, going west to east and south to north as per the OS grid pattern. Each block contains:
 
 * a two-byte 100km² grid identifier (SV etc.)
 * 100 four-byte data address placeholders
 
 The inclusion of the grid identifier is primarily for use with the included 010 Editor template to help navigate the ouput file.       
 
-The 100 address placeholders within a header grid block are ordered W to E then S to N. They may contain anything from 0 to 100 data addresses depending on how many 10km² OS data files are available for that grid. If no data file exists then the data address is left blank. Each populated address points to a data block containg elevation values.
+The 100 address placeholders within a header grid block are ordered W to E and S to N. They may contain anything from 0 to 100 data addresses depending on how many 10km² OS data files are available for that grid. If no data file exists then the data address is left blank. Each populated address points to a data block containg elevation values.
 
 <b>Example:</b> the header looks like this (with pipe symbols added for visual clarity which do not exist in the binary). Both the addresses and the blanks are 4 bytes long. Grid SV has only four data files: SV80, SV81, SV90, SV91. Their data addresses are stored as shown below:
 
@@ -55,9 +57,9 @@ SW|... < 100 four-byte blocks> ...|
 JL|... < 100 four-byte blocks> ...|
 JM|... < 100 four-byte blocks> ...|
 ```
-The data section follows the header section. It comprises contiguous data blocks each representing an imported OS data file. Each elevation data point within a data block is stored from E to W in blocks of 200 then S to N. <b>NB:</b> the OS data files are stored N to S thererfore their data rows are transformed accordingly on import. Each block contains 40,000 elevations representing the data imported from one ASCI data file, which contain 200 rows by 200 columns of elevation data.
+The data section follows the header section. It comprises contiguous data blocks each representing an imported OS data file. Each elevation data point within a data block is stored from E to W and S to N. Each block contains 40,000 elevations representing the data imported from one ASCI data file, which contain 200 rows by 200 columns of elevation data.
 
-The elevation data as supplied by OS has either an integer value (to a maximum of 1345m for [Ben Nevis](https://en.wikipedia.org/wiki/Ben_Nevis)) or a single decimal place value. So all stored values have been multiplied by 10 to allow for storage as space-saving 16 bit integers rather than 32 bit floats. 16 bit half floats were considered for storing the values but were rejected on the grounds of lack of native support in many popular web languages. Half floats would necessitate the use of custom unpacking functions with bit-shifting code. Division by 10 in comparison is very simple and is universally supported.
+The elevation data as supplied by OS is either a whole number or a decimal value to one decimal place of precision. So all stored values have been multiplied by 10 to allow for storage as space-saving 16 bit integers rather than 32 bit floats. 16 bit half floats were considered for storing exact values but were rejected on the grounds of lack of native support in many popular languages (necessitating writing complex bit-shifting unpacking functions). Division by 10 in comparison is very simple and is universally supported.
 
 <b>Example:</b> the following represents a data block starting at the south west corner going east (then south to north after 200 data points), where the actual supplied elevation values were 12, 12.5, 13.1, and 13. Hence all retrieved values must be divided by 10 before use.
 

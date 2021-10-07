@@ -6,4 +6,3 @@ edition = "2018"
 [dependencies]
 zip = "0.5.13"
 walkdir = "2.3.2"
-byteorder = "1"

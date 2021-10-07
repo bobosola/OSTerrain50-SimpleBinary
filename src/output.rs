@@ -5,7 +5,6 @@ use std::{path, fs, str};
 use std::error::Error;
 use std::collections::HashMap;
 use std::io::{Write, Seek, SeekFrom, BufWriter};
-use byteorder::{LittleEndian, WriteBytesExt};
 
 // Code for writing the OS binary file
 
@@ -119,7 +118,8 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
                     }
         
                     // Write the x10 value as a signed 16 bit integer
-                    file_buffer.write_i16::<LittleEndian>(str_val_x10.parse::<i16>()?)?;
+                    let i16_bytes = str_val_x10.parse::<i16>()?.to_le_bytes();
+                    file_buffer.write(&i16_bytes)?;
                 } 
             }    
         }
@@ -148,7 +148,8 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
                 // Look up the data address in the hash map then write it out
                 // converted to u32 to fit the four-byte placeholder
                 if offsets.contains_key(&identifier) {
-                    file_buffer.write_u32::<LittleEndian>(offsets[&identifier] as u32)?;
+                    let u32_bytes = (offsets[&identifier] as u32).to_le_bytes();
+                    file_buffer.write_all(&u32_bytes)?;
                 }
                 else {
                     // No data for this area so skip to the next placeholder
