@@ -59,7 +59,7 @@ JM|... < 100 four-byte blocks> ...|
 ```
 The data section follows the header section. It comprises contiguous data blocks each representing an imported OS data file. Each elevation data point within a data block is stored from E to W and S to N. Each block contains 40,000 elevations representing the data imported from one ASCI data file, which contain 200 rows by 200 columns of elevation data.
 
-The elevation data as supplied by OS is either a whole number or a decimal value to one decimal place of precision. So all stored values have been multiplied by 10 to allow for storage as space-saving 16 bit integers rather than 32 bit floats. 16 bit half floats were considered for storing exact values but were rejected on the grounds of lack of native support in many popular languages (necessitating writing complex bit-shifting unpacking functions). Division by 10 in comparison is very simple and is universally supported.
+The elevation data as supplied by OS is either a whole number or a decimal value to one decimal place. So all stored values have been multiplied by 10 to allow for storage as space-saving 16 bit integers rather than 32 bit floats. 16 bit half floats were considered for storing exact values but were rejected on the grounds of lack of native support in many popular languages (necessitating writing complex bit-shifting unpacking functions). Division by 10 in comparison is very simple and is universally supported.
 
 <b>Example:</b> the following represents a data block starting at the south west corner going east (then south to north after 200 data points), where the actual supplied elevation values were 12, 12.5, 13.1, and 13. Hence all retrieved values must be divided by 10 before use.
 

@@ -158,7 +158,6 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
             }
         }              
     }
-
     file_buffer.flush()?;
     println!("Processed {} OS data files.", utils::format_int(file_count));
     Ok(output_file) 

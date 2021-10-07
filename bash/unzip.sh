@@ -1,10 +1,9 @@
 #!/opt/homebrew/bin/bash
 
-# Recursively unzips an Ordnance Survey OSTerrain50 ASCII data zip file.
-# NB: Amend the bash path above for your environment.
+# Fully unzips an Ordnance Survey OSTerrain50 ASCII data zip file.
+# Amend the bash path and the zip file path accordingly.
 
-# Amend path to the zip file accordingly
-cd /Users/bobosola/rust/osterrain50/download 
+cd /Users/bobosola/rust/osterrain50/testdata 
 unzip terr50_gagg_gb.zip
 for d in terr50_gagg_gb/data/*; do   
 	if [ -d "$d" ]; then     
