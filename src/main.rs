@@ -3,7 +3,8 @@ mod unzip;
 mod utils;
 mod os;
 
-use std::{env, error::Error, path, string};
+use std::{env, path, string};
+use std:: error::Error;
 use std::time::Instant;
 
 // Converts Ordnance Survey 'OS Terrdata 50' ASCII data to a binary format

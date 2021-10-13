@@ -117,9 +117,9 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
                         str_val_x10 = format!("{}{}", elevation, "0");
                     }
         
-                    // Write the x10 value as a signed 16 bit integer
+                    // Write the x10 value as a signed 16 bit little endian integer
                     let i16_bytes = str_val_x10.parse::<i16>()?.to_le_bytes();
-                    file_buffer.write(&i16_bytes)?;
+                    file_buffer.write_all(&i16_bytes)?;
                 } 
             }    
         }
@@ -146,7 +146,7 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
                 let identifier = format!("{}{}{}", grid, easting, northing);
 
                 // Look up the data address in the hash map then write it out
-                // converted to u32 to fit the four-byte placeholder
+                // converted to little endian u32 to fit the four-byte placeholder
                 if offsets.contains_key(&identifier) {
                     let u32_bytes = (offsets[&identifier] as u32).to_le_bytes();
                     file_buffer.write_all(&u32_bytes)?;
