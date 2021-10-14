@@ -4,18 +4,17 @@ This repo contains Rust code to build a command-line application which produces 
 
 Why Rust? Because it produces small, cross-platform, very high performance native executables with the minimum of fuss. Compiled ready-to-run versions of this application for Windows, Mac & Ubuntu are available to [download from the author's site](TODO).
 
-Rust demo code to read the binary elevations file is available in ``tests``. On a 2020 Mac mini M1, this retrieved 18,485 elevations at 50m intervals along a line between Niton Down (Isle of Wight) and Dùnan Mòr (Cape Wrath, Scotland) in just under 30ms.
+Rust code to read the binary elevations file is also available in the repo. On a 2020 Mac mini M1, this retrieved 18,485 elevations at 50m intervals along a line between Niton Down (Isle of Wight) and Dùnan Mòr (Cape Wrath, Scotland) in just under 30ms.
 
 A PHP class to read the binary elevations file is also available from the repo [OSTerrain50-PHP](). 
 
-Both the Rust and  PHP file reading code are heavily commented to allow for translation to any language which supports binary file reads with file pointers.
-
+Both the Rust and PHP file reading code are heavily commented to allow for easy translation to other languages.
 
 ## What problem does this solve?
 
-The OS Terrain 50 data is already available in a number of formats. However most are complex binary formats for consumption by specific software. The only non-binary format is the ASCII Grid format which contains thousands of CSV-like files which require around 650MB of storage space and are expensive to parse in real time.
+The OS Terrain 50 data is already available in a number of formats. However most are complex binary formats for consumption by specific software. The only non-binary format is the ASCII Grid format which contains thousands of small CSV-like files which require around 650MB of storage space.
 
-This application will create a space-efficient 229MB simple binary data file containing all the ASCII Grid data. 
+This application creates a space-efficient 229MB simple binary data file containing all the OS data for use in any language capable of file pointer jumps and binary reads.
 
 ## Building the application
 
@@ -29,13 +28,13 @@ This application will create a space-efficient 229MB simple binary data file con
 
 1\) ``./<application>   <path to OS zip file>`` unzips an [OS Terrain 50 ASCII Grid zip file](https://osdatahub.os.uk/downloads/open/Terrain50) then creates the binary data file ``OSTerrain50.bin`` from the unzipped data directory.
 
-2 \)``./<application>  <path to data directory>`` creates the binary data file ``OSTerrain50.bin`` from an existing OS Terrain 50 data directory.
+2 \)``./<application>  <path to data directory>`` creates the binary data file ``OSTerrain50.bin`` from an existing (fully-unzipped) OS Terrain 50 data directory.
 
 ## Description of the binary data file format
 
-This section is aimed at developers who may wish to read the binary data for their own purposes. It assumes some familiarity with the Ordnance Survey National Grid. A diagram of [the OS grid](https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid) is recommended to be viewed alongside this page to help make sense of the following explanations.
+This section is for developers who may wish to read the binary data for their own purposes. It assumes some familiarity with the Ordnance Survey National Grid. A diagram of [the OS grid](https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid) is recommended to be viewed alongside this page.
 
-The repo includes an [010 Editor](https://www.sweetscape.com/010editor/) template to help navigate the ouput file for data checking and debugging during development. More information is in ``010 template/README.md``.
+The repo also includes an [010 Editor](https://www.sweetscape.com/010editor/) template to help navigate the ouput file for data checking and debugging during development. More information is in ``010 template/README.md``. This is not a requirement however.
 
 The binary data file consists of:
 
@@ -45,9 +44,9 @@ The binary data file consists of:
 
 Addresses and elevation values are stored in little-endian byte order.
 
-The elevation data is in metres. It is supplied either as a whole number or a decimal value to one decimal place up to a maximum value of 1345 at [Ben Nevis](https://getoutside.ordnancesurvey.co.uk/local/ben-nevis-highland). Coastal waterline values vary (see the [OS User Guide](https://www.ordnancesurvey.co.uk/documents/product-support/user-guide/os-terrain-50-user-guide.pdf) for more information on this) so small negative coastline values of e.g. -1.5m may be found.
+The elevation data is in metres. It is supplied either as a whole number or a decimal value to one decimal place up to a maximum value of 1345m at [Ben Nevis](https://getoutside.ordnancesurvey.co.uk/local/ben-nevis-highland). Coastal waterline values vary (see the [OS User Guide](https://www.ordnancesurvey.co.uk/documents/product-support/user-guide/os-terrain-50-user-guide.pdf) for more information on this) so small negative coastline values of e.g. -1.5m may be found.
 
-All supplied elevation values have been multiplied by 10 to allow for storage as 16 bit integers rather than 32 bit floats. This approach requires half the storage space of floats while maintaining full data accuracy. 16 bit half floats were also tested for storage purposes, but they [run out of decimal place accuracy](https://en.wikipedia.org/wiki/Half-precision_floating-point_format#Precision_limitations_on_decimal_values_in_[1,_2048]) beyond values of 64.0. All retrieved values must therefore be divided by 10 before use.
+All supplied elevation values have been multiplied by 10 to allow for storage as 16 bit integers rather than 32 bit floats. This approach requires half the storage space of floats while maintaining full data accuracy. All retrieved values must therefore be divided by 10 before use. (16 bit half floats were also tested for storage purposes, but they [run out of decimal place accuracy](https://en.wikipedia.org/wiki/Half-precision_floating-point_format#Precision_limitations_on_decimal_values_in_[1,_2048]) beyond elevation values of 64m.)
 
 ### File sig
 
@@ -62,11 +61,11 @@ The header section contains 91 contiguous blocks of 402 bytes, each one represen
 
 The inclusion of the grid identifier is primarily for use with the included 010 Editor template to help navigate the ouput file.       
 
-The 100 address placeholders within a header grid block are ordered W to E and S to N. They may contain anything from 0 to 100 data addresses depending on how many 10km² OS data files are available for that grid. If no data file exists then the data address is left blank. Each populated address is stored as 32 bit unsigned int and points to a data block containg elevation values.
+The 100 address placeholders within a header grid block are ordered W to E and S to N. They may contain anything from 0 to 100 data addresses depending on how many 10km² OS data files are available for that grid. If no data file exists (i.e it's a 100% sea area), then the data address is left blank. Each populated address is stored as 32 bit unsigned int and points to a data block containg elevation values.
 
 ### Data section
 
-The data section comprises contiguous data blocks, each representing an imported OS data file which contains 200 rows by 200 columns of elevation data. Each elevation data value within a data block is stored from W to E and S to N and is stored as a 16 bit signed integer.
+The data section comprises contiguous data blocks, each representing an imported OS data file which contains 200 rows by 200 columns of elevation data. Each elevation data value within a data block is stored from W to E and S to N and is stored as a 16 bit signed integer. 
 
 ### File layout
 
@@ -89,3 +88,17 @@ JM|... 100 4-byte blocks ...|↵         <- end of header, start of data section
 Note that grid SV has only four data files: SV80, SV81, SV90, SV91. When stored W to E and S to N their data addresses are stored as shown above, which match their layout in the OS grid.
 
 The elevations in a data block start at the south west corner and run W to E and then S to N (after 200 data points), where the demo supplied elevation values above were 12, 12.7, 13.1, and 13.
+
+##Reading the data
+
+Conceptually, an elevation is retrieved thus:
+
+* calculate which header grid section the elevation location is in
+* calculate which address placeholder holds the data location address
+* jump to the address placeholder and read the data address
+* if there is no data address, then it's a 100% sea area so return 0
+* if there is a data address, calculate the offset in the data block for the exact location
+* add the offset to the data address and jump to that location
+* read the elevation data
+
+The function ``read_elevations()`` in ``tests\common\mod.rs`` has examples of how to make the various calculations.
