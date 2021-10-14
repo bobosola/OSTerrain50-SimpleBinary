@@ -61,7 +61,7 @@ The header section contains 91 contiguous blocks of 402 bytes, each one represen
 
 The inclusion of the grid identifier is primarily for use with the included 010 Editor template to help navigate the ouput file.       
 
-The 100 address placeholders within a header grid block are ordered W to E and S to N. They may contain anything from 0 to 100 data addresses depending on how many 10km² OS data files are available for that grid. If no data file exists (i.e it's a 100% sea area), then the data address is left blank. Each populated address is stored as 32 bit unsigned int and points to a data block containg elevation values.
+The 100 address placeholders within a header grid block are ordered W to E and S to N. They may contain anything from 0 to 100 data addresses depending on how many 10km² OS data files are available for that grid. If no data file exists (i.e it's a 100% sea area), then the data address is left blank. Each populated address is stored as a 32 bit unsigned int and points to a data block containg elevation values.
 
 ### Data section
 
@@ -89,7 +89,7 @@ Note that grid SV has only four data files: SV80, SV81, SV90, SV91. When stored 
 
 The elevations in a data block start at the south west corner and run W to E and then S to N (after 200 data points), where the demo supplied elevation values above were 12, 12.7, 13.1, and 13.
 
-##Reading the data
+# Reading the data
 
 Conceptually, an elevation is retrieved thus:
 
