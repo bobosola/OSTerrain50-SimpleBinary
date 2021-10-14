@@ -89,7 +89,7 @@ Note that grid SV has only four data files: SV80, SV81, SV90, SV91. When stored 
 
 The elevations in a data block start at the south west corner and run W to E and then S to N (after 200 data points), where the demo supplied elevation values above were 12, 12.7, 13.1, and 13.
 
-# Reading the data
+## Reading the data
 
 Conceptually, an elevation is retrieved thus:
 
