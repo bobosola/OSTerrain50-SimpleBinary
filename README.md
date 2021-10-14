@@ -4,7 +4,7 @@ This repo contains Rust code to build a command-line application which produces 
 
 Why Rust? Because it produces small, cross-platform, very high performance native executables with the minimum of fuss. Compiled ready-to-run versions of this application for Windows, Mac & Ubuntu are available to [download from the author's site](TODO).
 
-Rust demo code to read the binary elevations file is available in ``tests``. On a 2020 Mac mini M1, this retrieved 18,484 elevations at 50m intervals along a line between Niton Down (Isle of Wight) to Dùnan Mòr (Cape Wrath, Scotland) in just under 30ms.
+Rust demo code to read the binary elevations file is available in ``tests``. On a 2020 Mac mini M1, this retrieved 18,485 elevations at 50m intervals along a line between Niton Down (Isle of Wight) and Dùnan Mòr (Cape Wrath, Scotland) in just under 30ms.
 
 A PHP class to read the binary elevations file is also available from the repo [OSTerrain50-PHP](). 
 
