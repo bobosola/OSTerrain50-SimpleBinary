@@ -182,16 +182,16 @@ fn get_infill_coords(coord_start: OSCoords, coord_end: OSCoords) -> Vec<OSCoords
       Returns a vec of coords approximately 50m apart.
       Example: Start and End are 200m apart:
 
-                              • End
-                           •   |
-      diagonal_diff  •       |  northing_diff
-                  •           |
-         Start •_______________|
-               easting_diff
+                                 • End
+                             •    |
+          diagonal_diff  •        |  northing_diff
+                     •            |
+            Start •_______________|
+                     easting_diff
 
-      • 4 infill diagonal diffs
-      • 3 infill coords required     
-      • 5 coords returned
+         • 4 infill diagonal diffs
+         • 3 infill coords required     
+         • 5 coords returned
    */
 
    // NB: work in floats for cumulative calcs to avoid rounding
