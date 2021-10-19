@@ -4,7 +4,7 @@ mod common;
   Scotland
 ************************************/
 
-// Binary data file
+// SET THIS >> path to binary data file
 const DATA_FILE: &str = "/Users/bobosola/rust/osterrain50/testdata/OSTerrain50.bin";
 
 #[test]
@@ -176,14 +176,15 @@ fn length_of_gb() {
 
     let start_time = std::time::Instant::now();
     let clean_coords = common::parse_coords(&["SZ 494 772", "NC 261 740"]);
-    if let Ok(coord_list) = common::read_elevations(DATA_FILE, &clean_coords, true) {
-        let num_coords = coord_list.len();
-        // Run 'cargo test -- --nocapture' to see this line - only works with debug build
-        println!(
-            "Returned {} elevations in {:?}",
-            num_coords,
-            start_time.elapsed()
-        );
-        assert_eq!(18485, num_coords);
+    match common::read_elevations(DATA_FILE, &clean_coords, true) {
+        Ok(coord_list) => {
+            let num_coords = coord_list.len();
+            // Run 'cargo test -- --nocapture > test_output.txt' to examine the output
+            // NB: only works with (much slower) debug build (which is slower than release build)
+            println!("{:?}", coord_list);
+            println!("Returned {} elevations in {:?}", num_coords, start_time.elapsed());
+            assert_eq!(18485, num_coords);
+        }
+        Err(e) => println!("Error {:?}", e)
     }
 }

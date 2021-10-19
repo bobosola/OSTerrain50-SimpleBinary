@@ -184,8 +184,8 @@ fn get_infill_coords(coord_start: OSCoords, coord_end: OSCoords) -> Vec<OSCoords
     // innaccuracies which become noticeable over long distances.
 
     // Get the diagonal difference between the start and end coords
-    let easting_diff = (coord_start.easting - coord_end.easting).abs();
-    let northing_diff = (coord_start.northing - coord_end.northing).abs();
+    let easting_diff = coord_end.easting - coord_start.easting;
+    let northing_diff = coord_end.northing - coord_start.northing;
     let diagonal_diff =
         ((easting_diff * easting_diff) as f64 + (northing_diff * northing_diff) as f64).sqrt();
 
@@ -212,22 +212,13 @@ fn get_infill_coords(coord_start: OSCoords, coord_end: OSCoords) -> Vec<OSCoords
 
     let infills_required = infill_diag_diff.round() as i64 - 1;
     for _ in 0..infills_required {
-        if coord_end.easting > coord_start.easting {
-            cumulative_east += delta_east;
-        } else if coord_end.easting < coord_start.easting {
-            cumulative_east -= delta_east;
-        }
 
-        if coord_end.northing > coord_start.northing {
-            cumulative_north += delta_north;
-        } else if coord_end.northing < coord_start.northing {
-            cumulative_north -= delta_north;
-        }
+        cumulative_east += delta_east;
+        cumulative_north += delta_north;
 
-        // Round and cast here just before storing the coords
+        // Round and cast just before storing the coords
         infill_coords.easting = cumulative_east.round() as i64;
         infill_coords.northing = cumulative_north.round() as i64;
-
         coords.push(infill_coords);
     }
     coords.push(coord_end);

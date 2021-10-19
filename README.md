@@ -32,7 +32,7 @@ This application creates a space-efficient 229MB simple binary data file contain
 
 This section is for developers who may wish to read the binary data for their own purposes. It assumes some familiarity with the Ordnance Survey National Grid. A diagram of [the OS grid](https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid) is recommended to be viewed alongside this page.
 
-The repo also includes an [010 Editor](https://www.sweetscape.com/010editor/) template to help navigate the ouput file for data checking and debugging during development. More information is in ``010 template/README.md``. This is not a requirement however.
+The repo also includes an [010 Editor](https://www.sweetscape.com/010editor/) template to help navigate the ouput file for data checking and debugging during development. More information is in ``010template/README.md``. This is not a requirement however.
 
 The binary data file consists of:
 
