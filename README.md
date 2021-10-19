@@ -4,11 +4,9 @@ This repo contains Rust code to build a command-line application which produces 
 
 Why Rust? Because it produces small, cross-platform, very high performance native executables with the minimum of fuss. Compiled ready-to-run versions of this application for Windows, Mac & Ubuntu are available to [download from the author's site](TODO).
 
-Rust code to read the binary elevations file is also available in the repo. On a 2020 Mac mini M1, this retrieved 18,485 elevations at 50m intervals along a line between Niton Down (Isle of Wight) and Dùnan Mòr (Cape Wrath, Scotland) in just under 30ms.
+Rust demo code to read the binary elevations file is also available in the repo. On a 2020 Mac mini M1, this retrieved 18,485 elevations at 50m intervals along a line between Niton Down (Isle of Wight) and Dùnan Mòr (Cape Wrath, Scotland) in just under 30ms.
 
-A PHP class to read the binary elevations file is also available from the repo [OSTerrain50-PHP](). 
-
-Both the Rust and PHP file reading code are heavily commented to allow for easy translation to other languages.
+A PHP class to read the binary elevations file is also available from the repo [OSTerrain50-PHP](). Both the Rust and PHP file reading code are heavily commented to allow for easy translation to other languages. 
 
 ## What problem does this solve?
 
@@ -93,12 +91,12 @@ The elevations in a data block start at the south west corner and run W to E and
 
 Conceptually, an elevation is retrieved thus:
 
-* calculate which header grid section the elevation location is in
-* calculate which address placeholder holds the data location address
-* jump to the address placeholder and read the data address
+* calculate the applicable header grid section
+* calculate which address placeholder in the grid section holds the data address
+* jump to the address placeholder and read the data address as a u32
 * if there is no data address, then it's a 100% sea area so return 0
-* if there is a data address, calculate the offset in the data block for the exact location
+* if there is a data address, calculate the required offset in the data block for the exact location
 * add the offset to the data address and jump to that location
-* read the elevation data
+* read the elevation data as an i16 then multiply by 10
 
 The function ``read_elevations()`` in ``tests\common\mod.rs`` has examples of how to make the various calculations.
