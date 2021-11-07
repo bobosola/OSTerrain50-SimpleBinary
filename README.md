@@ -2,11 +2,11 @@
 
 This repo contains Rust code to build a command-line application which produces a simple binary elevation data file using data imported from the freely-available ASCII  [Ordnance Survey OS Terrain 50](https://www.ordnancesurvey.co.uk/business-government/products/terrain-50) data set.  This allows for very fast reading of elevation data for all of Great Britain.
 
-Why Rust? Because it produces small, cross-platform, very high performance native executables with the minimum of fuss. Compiled ready-to-run versions of this application for Windows, Mac & Ubuntu are available to [download from the author's site](TODO).
+Why Rust? Because it produces small, cross-platform, very high performance native executables with the minimum of fuss. Compiled ready-to-run versions of this application for Windows, Mac & Ubuntu are available to [download from the author's site](https://osola/org/uk/osterrain50).
 
 Rust demo code to read the binary elevations file is also available in the repo. On a 2020 Mac mini M1, this retrieved 18,485 elevations at 50m intervals along a line between Niton Down (Isle of Wight) and Dùnan Mòr (Cape Wrath, Scotland) in just under 30ms.
 
-A PHP class to read the binary elevations file is also available from the repo [OSTerrain50-PHP](). Both the Rust and PHP file reading code are heavily commented to allow for easy translation to other languages. 
+A PHP class to read the binary elevations file is also available from the repo [OSTerrain50-PHP](https://github.com/bobosola/OSTerrain50-PHP). Both the Rust and PHP file reading code are heavily commented to allow for easy translation to other languages. 
 
 ## What problem does this solve?
 
