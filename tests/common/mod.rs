@@ -35,26 +35,26 @@ use std::path;
       to require 7 digits, e.g. Ronas Hill (Shetland): 430530,1183500 (HU 30530 83500)
 */
 
-// OS Grid
-const GRIDS_PER_ROW_100: i64 = 7; // No. of grids per row in the full 91 grid block
-const METRES_IN_500_GRID: i64 = 500_000; // No of metres in 500 Km² grid E & N
-const METRES_IN_100_GRID: i64 = 100_000; // No of metres in 100 Km² grid E & N
-const METRES_IN_10_GRID: i64 = 10_000; // No of metres in 10 Km² grid E & N
-const DATA_COLS_IN_10_GRID: i64 = 10; // No. of columns in a 10km² grid
+// British National Grid
+const GRIDS_PER_ROW_100: i64 = 7;         // No. of grids per row in the full 91 grid block
+const METRES_IN_500_GRID: i64 = 500_000;  // No of metres in 500 Km² grid E & N
+const METRES_IN_100_GRID: i64 = 100_000;  // No of metres in 100 Km² grid E & N
+const METRES_IN_10_GRID: i64 = 10_000;    // No of metres in 10 Km² grid E & N
+const DATA_COLS_IN_10_GRID: i64 = 10;     // No. of columns in a 10km² grid
 
 // Data file sig
 const FILE_SIG: &[u8; 11] = b"OSTerrain50";
 
-// Header section
-const MAX_NUM_DATA_FILES: i64 = 100; // Maximum number of data files per 10km² grid
-const GRID_IDENT_LEN: i64 = 2; // Length of a grid identifer ("SV" etc.)
-const ADDRESS_LENGTH: i64 = 4; // Length of data addresses stored in the output file
+// Data file header section
+const MAX_NUM_DATA_FILES: i64 = 100;      // Maximum number of data files per 10km² grid
+const GRID_IDENT_LEN: i64 = 2;            // Length of a grid identifer ("SV" etc.)
+const ADDRESS_LENGTH: i64 = 4;            // Length of data addresses stored in the output file
 const HEADER_BLOCK_LENGTH: i64 = GRID_IDENT_LEN + (MAX_NUM_DATA_FILES * ADDRESS_LENGTH);
 
-// Data section
-const ELEVATIONS_PER_COL: i64 = 200; // No. of elevation values in each data column
-const ELEVATION_DATA_LENGTH: i64 = 2; // Length of a single elvation data point
-const ELEVATION_DISTANCE: i64 = 50; // Distance between successive elevations points
+// Data file data section
+const ELEVATIONS_PER_COL: i64 = 200;      // No. of elevation values in each data column
+const ELEVATION_DATA_LENGTH: i64 = 2;     // Length of a single elvation data point
+const ELEVATION_DISTANCE: i64 = 50;       // Distance between successive elevations points
 
 #[derive(Debug, Clone, Copy)]
 pub struct OSCoords {
@@ -73,15 +73,28 @@ pub fn read_elevations(
     // Optionally creates infill coordinates and elevations at approx. 50m intervals between
     // each coordinate pair.
 
+    if coords_list.len() < 1 {
+        panic!("Need at least one location in the coords list");
+    }
+
     let mut coords: Vec<OSCoords> = Vec::new();
+
     if infill {
         for i in 0..coords_list.len() {
+            // Need at least two locations to prepare infills
             if i > 0 {
-                let infill_coords = get_infill_coords(coords_list[i - 1], coords_list[i]);
-                coords.extend(infill_coords);
+                let mut include_start = true;
+                if i >= 2 {
+                    // Avoid double insertions where previous end == current start
+                    include_start = false;
+                }
+                let infills = get_infills(coords_list[i - 1], coords_list[i], include_start);
+                // Merge the results
+                coords.extend(infills);               
             }
         }
     } else {
+        // No infills required so just process the input locations
         coords = coords_list.to_vec();
     }
 
@@ -93,12 +106,13 @@ pub fn read_elevations(
     let mut reader = BufReader::new(file);
 
     for i in 0..coords.len() {
+
         // Work out how many grid blocks to jump over in the file header section.
         // NB: uses integer division to deliberately truncate the remainders - use floor(),
         // trunc() etc. in untyped languages
 
-        // Reduce the coords down to obtain whole grid unit multipliers and apply them to calculate
-        // the mumber of grids to jump over
+        // Reduce the coords down to obtain whole grid unit multipliers and apply them to
+        // calculate the mumber of grids to jump over
         let e_cols = coords[i].easting / METRES_IN_100_GRID;
         let n_rows = coords[i].northing / METRES_IN_100_GRID;
         let grid_blocks_to_jump = (GRIDS_PER_ROW_100 * n_rows) + e_cols;
@@ -112,7 +126,7 @@ pub fn read_elevations(
         let n_addr_rows = (coords[i].northing % METRES_IN_100_GRID) / METRES_IN_10_GRID;
         let data_placeholders_to_jump = (n_addr_rows * DATA_COLS_IN_10_GRID) + e_addr_cols;
 
-        // Can now determine the indidual data block address to jump to within the grid block
+        // Can now determine the individual data block address to jump to within the grid block
         let data_block_address_offset =
             (grid_block_offset + GRID_IDENT_LEN + (data_placeholders_to_jump * ADDRESS_LENGTH))
                 as u64;
@@ -133,55 +147,73 @@ pub fn read_elevations(
         // Jump to the location of the data block address
         reader.seek(SeekFrom::Start(data_block_address_offset as u64))?;
 
-        // Read the data address value stored there into a buffer
+        // Read the four byte data address value stored there into a buffer
         let mut address_buffer = [0; ADDRESS_LENGTH as usize];
         reader.read_exact(&mut address_buffer)?;
 
-        // If there is a non-zero stored value there,
-        // convert it to a little endian address value
+        // If there is a non-zero stored value there, convert it to
+        // a little endian address value
         let data_block_address = u32::from_le_bytes(address_buffer) as u64;
         if data_block_address != 0 {
+
             // Apply the required elevation data offset to the data block address
             // and jump there
             let elev_addr = data_block_address + elevation_offset;
             reader.seek(SeekFrom::Start(elev_addr))?;
 
+            // Read the elevation data as two bytes
             let mut elevation_buffer = [0; ELEVATION_DATA_LENGTH as usize];
             reader.read_exact(&mut elevation_buffer)?;
 
-            // Because data never has more than one decimal place, it's stored
-            // as 10x actual value as i16 for space-efficient storage,
+            // Because elevation data never has more than one decimal place, it's stored
+            // as 10x actual value as little endian i16 for space-efficient storage
             let elev_x10 = i16::from_le_bytes(elevation_buffer);
             coords[i].elevation = Some(elev_x10 as f32 / 10f32);
-        } else {
+        }
+        else {
+            // No data address means no data exists for this location, i.e. it's a 
+            // sea area or an out-of-scope land mass, e.g. the Isle of Man
             coords[i].elevation = Some(0 as f32);
         }
-        // Rewind for next iteration
-        reader.seek(SeekFrom::Start(0))?;
     }
     Ok(coords)
 }
 
-fn get_infill_coords(coord_start: OSCoords, coord_end: OSCoords) -> Vec<OSCoords> {
+fn get_infills(coord_start: OSCoords, coord_end: OSCoords, include_start: bool) -> Vec<OSCoords> {
 
     /*
-       Returns a vec of coords approximately 50m apart.
-       Example: Start and End are 200m apart:
+       Creates infill locations approx. 50m apart between the two parameter locations
 
-                                  • End
-                              •    |
-           diagonal_diff  •        |  northing_diff
-                      •            |
-             Start •_______________|
-                      easting_diff
+       The include_start parameter controls whether the start is included in the output
+       in order to avoid double insertions when later merging infilled locations
+       
+       Example: for 4 locations requiring infills:
+       1---2               get_infills(1, 2, true)  returns 1st, infills & 2nd location
+           ---3            get_infills(2, 3, false) returns infills & 3rd location
+               ---4        get_infills(3, 4, false) returns infills & 4th location
+        so merging the three results contains all 4 locations and no duplicates
+ 
+       Example: for 2 locations where start and end are 200m apart:
+                               • end
+                           •   |
+        diagonal_diff  •       |  northing_diff
+                   •           |
+         start •_______________|
+                easting_diff
 
-          • 4 infill diagonal diffs
-          • 3 infill coords required
-          • 5 coords returned
+        • 3 infill coords are required
+        • 5 coords are returned if include_start = true
     */
 
+    // Build the output vec
+    let mut coords: Vec<OSCoords> = Vec::new();
+
+    if include_start {
+        coords.push(coord_start);
+    }
+
     // NB: work in floats for cumulative calcs to avoid rounding
-    // innaccuracies which become noticeable over long distances.
+    // innaccuracies which become noticeable over long distances
 
     // Get the diagonal difference between the start and end coords
     let easting_diff = coord_end.easting - coord_start.easting;
@@ -189,37 +221,43 @@ fn get_infill_coords(coord_start: OSCoords, coord_end: OSCoords) -> Vec<OSCoords
     let diagonal_diff =
         ((easting_diff * easting_diff) as f64 + (northing_diff * northing_diff) as f64).sqrt();
 
-    // Get the infill easting & northing deltas
-    // as a proportion of the infill diagonal diff
-    let infill_diag_diff = diagonal_diff / ELEVATION_DISTANCE as f64;
-    let delta_east = easting_diff as f64 / infill_diag_diff;
-    let delta_north = northing_diff as f64 / infill_diag_diff;
+    // Only create infills where the two locations are greater than 50m apart
+    if diagonal_diff > ELEVATION_DISTANCE as f64 {
 
-    let mut infill_coords = OSCoords {
-        easting: 0,
-        northing: 0,
-        elevation: None,
-    };
+        // Get the infill easting & northing deltas
+        // as a proportion of the infill diagonal diff
+        let infill_diag_diff = diagonal_diff / ELEVATION_DISTANCE as f64;
+        let delta_east = easting_diff as f64 / infill_diag_diff;
+        let delta_north = northing_diff as f64 / infill_diag_diff;
 
-    // Build the output vec
-    let mut coords: Vec<OSCoords> = Vec::new();
-    coords.push(coord_start);
+        // Prepare an object to hold the generated infill location
+        let mut infill_coords = OSCoords {
+            easting: 0,
+            northing: 0,
+            elevation: None,
+        };
 
-    // Cumulativley add the delta_east & delta_north diffs
-    // to create the required number of infill coords
-    let mut cumulative_east = coord_start.easting as f64;
-    let mut cumulative_north = coord_start.northing as f64;
+        // Cumulativley add the delta_east & delta_north diffs
+        // to create the required number of infill coords
 
-    let infills_required = infill_diag_diff.round() as i64 - 1;
-    for _ in 0..infills_required {
+        // Begin with the start location
+        let mut cumulative_east = coord_start.easting as f64;
+        let mut cumulative_north = coord_start.northing as f64;
 
-        cumulative_east += delta_east;
-        cumulative_north += delta_north;
+        // Get the number of infills required   
+        let infills_required = infill_diag_diff.ceil() as i64 - 1;
 
-        // Round and cast just before storing the coords
-        infill_coords.easting = cumulative_east.round() as i64;
-        infill_coords.northing = cumulative_north.round() as i64;
-        coords.push(infill_coords);
+        // Create the infill locations
+        for _ in 0..infills_required {
+
+            cumulative_east += delta_east;
+            cumulative_north += delta_north;
+
+            // Store the infill location rounded to integer values
+            infill_coords.easting = cumulative_east.round() as i64;
+            infill_coords.northing = cumulative_north.round() as i64;
+            coords.push(infill_coords);
+        }
     }
     coords.push(coord_end);
     coords
