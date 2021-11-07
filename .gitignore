@@ -1,6 +1,6 @@
 /target/*
 /testdata/*
 /.vscode/*
-/.DS_Store
+.DS_Store
 /Cargo.lock
 test_output.txt
