@@ -9,6 +9,7 @@ cargo build --target=aarch64-apple-darwin --release
 cargo build --target=x86_64-apple-darwin --release
 
 # Create the "fat binary" from the builds
+# NB: the directories below must all exist!
 lipo -create -output target/universal/osterrain50 \
 target/aarch64-apple-darwin/release/osterrain50 \
 target/x86_64-apple-darwin/release/osterrain50
