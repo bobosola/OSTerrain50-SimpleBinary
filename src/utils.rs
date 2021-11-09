@@ -1,4 +1,4 @@
-use std::{error::Error, path, process, string};
+use std::{error::Error, path, process, string, env};
 
 // Utility functions
 
@@ -8,9 +8,17 @@ pub fn die(err: Box<dyn Error>) {
 }
 
 pub fn get_parent_dir(path: &path::Path) -> Result<path::PathBuf, Box<dyn Error>> {
-    if let Some(path) = path.parent() {
-        if path.is_dir() {
-            return Ok(path.to_path_buf());
+    if let Some(p) = path.parent() {
+        if p.is_dir() {
+            return Ok(p.to_path_buf());
+        }
+        else {
+            // Parent is empty, so return the current executing directory parent
+            if let Some(p) = env::current_exe()?.parent() {
+                if p.is_dir() {
+                    return Ok(p.to_path_buf());
+                }
+            }
         }
     }
     Err("Could not get parent directory".into())

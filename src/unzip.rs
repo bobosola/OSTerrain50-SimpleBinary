@@ -106,14 +106,10 @@ fn unzip_subdirs(data_dir: &path::Path) -> Result<u64, Box<dyn Error>> {
     Ok(unzip_count)
 }
 
-pub fn is_zip_file(path: &path::Path) -> bool {
+pub fn is_zip_file(path: &path::Path) -> bool {   
     let has_zip_suffix = match path.to_str() {
         Some(path) => path.ends_with(".zip"),
         None => false,
     };
-
-    if has_zip_suffix && path.is_file() {
-        return true;
-    }
-    false
+    has_zip_suffix && path.is_file()
 }

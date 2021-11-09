@@ -85,7 +85,7 @@ fn show_args_usage(arg: &str) -> Result<(), Box<dyn Error>> {
     let app_name = app_path
         .file_name()
         .and_then(|s| s.to_str())
-        .ok_or("Could not convert app fikle name to string")?;
+        .ok_or("Could not convert app file name to string")?;
     eprint!(
         "
 Usage:
