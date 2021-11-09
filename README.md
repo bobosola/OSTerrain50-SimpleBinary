@@ -100,6 +100,6 @@ Conceptually, an elevation is retrieved thus:
 * if there is no data address, then it's a 100% sea area so return 0
 * if there is a data address, calculate the required offset in the data block for the exact location
 * add the offset to the data address and jump to that location
-* read the elevation data as a signed 16 bit integer then multiply by 10
+* read the elevation data as a signed 16 bit integer then divide by 10
 
 The function ``read_elevations()`` in ``tests\common\mod.rs`` has example Rust code of how to make the various calculations. The PHP repo [OSTerrain50-PHP](https://github.com/bobosola/OSTerrain50-PHP) also contains PHP code of how to make the calculations.
