@@ -16,7 +16,7 @@ be deleted.
 Unzip the .exe file then run in PowerShell as:
 ``.\osterrain50.exe path\to\terr50_gagg_gb.zip``
 
-#### Mac
+#### Macgit 
 
 Drag the executable **osterrain50** from the dmg and run in a terminal as:
 ``./osterrain50 path/to/terr50_gagg_gb.zip``
@@ -26,7 +26,7 @@ Drag the executable **osterrain50** from the dmg and run in a terminal as:
 Extract the executable **osterrain50**  and run in a terminal as:
 ``./osterrain50 path/to/terr50_gagg_gb.zip``
 
-##Optional argument usage
+## Optional argument usage
 
 If you already have a fully unzipped OS Terrain 50 data set you wish to use for some reason, then running as 
 ``./osterrain50 path/to/fully-unzipped-OS-Terrain-50-data-directory``
