@@ -14,5 +14,5 @@ lipo -create -output target/universal/osterrain50 \
 target/aarch64-apple-darwin/release/osterrain50 \
 target/x86_64-apple-darwin/release/osterrain50
 
-# Check the fat binary contains both exectuables
+# Check the fat binary contains both executables
 file target/universal/osterrain50

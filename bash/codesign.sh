@@ -11,7 +11,7 @@
 # https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
 
 
-# The binary to be signed and put in a DMG file
+# The binary to be signed and put in a disk image DMG file
 APP="/Users/bobosola/rust/osterrain50/target/universal/osterrain50"
 
 # Apple "Developer ID Application" certificate installed in Keychain
@@ -48,10 +48,10 @@ codesign -dv --verbose "$IMG_DEST"
 # profile app password AC_PASSWORD and wait for completion.
 # NB: AC_PASSWORD is created as per instructions in
 # "Customizing the Notarization Workflow" to avoid having actual
-# password in scripts.
+# passwords in scripts.
 xcrun notarytool submit "$IMG_DEST" --keychain-profile "AC_PASSWORD" --wait
 
-# Wait for the service to return a message
+# Wait for the service to return a message...
 
 # Assuming success, staple the ticket to the DMG
 xcrun stapler staple "$IMG_DEST"
