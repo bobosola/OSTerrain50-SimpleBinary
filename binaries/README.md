@@ -16,7 +16,7 @@ be deleted.
 Unzip the .exe file then run in PowerShell as:
 ``.\osterrain50.exe path\to\terr50_gagg_gb.zip``
 
-#### Macgit 
+#### Mac
 
 Drag the executable **osterrain50** from the dmg and run in a terminal as:
 ``./osterrain50 path/to/terr50_gagg_gb.zip``
