@@ -67,7 +67,7 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
             let file_name = format!("{}{}", dir_name, file_num);
 
             // Add the file suffix and check the file exists
-            let file_path = match_dir.join(&format!("{}{}", file_name, os::FILE_SUFFIX));
+            let file_path = match_dir.join(&format!("{}{}", file_name.to_uppercase(), os::FILE_SUFFIX));
 
             if !file_path.is_file() {
                 continue;
