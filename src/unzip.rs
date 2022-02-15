@@ -29,7 +29,7 @@ fn unzip(source: &path::Path, target_dir: &path::Path) -> Result<path::PathBuf, 
     let mut top_dir = path::PathBuf::new();
 
     for i in 0..archive.len() {
-        // The archive entry may contain a directory heirarchy to be extracted to
+        // The archive entry may contain a directory hierarchy to be extracted to
         // so check any such path is valid, otherwise ignore
         let mut entry = archive.by_index(i)?;
         let outpath = match entry.enclosed_name() {

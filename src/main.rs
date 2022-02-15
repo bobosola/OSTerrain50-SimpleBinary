@@ -7,7 +7,7 @@ use std::error::Error;
 use std::time::Instant;
 use std::{env, path, string};
 
-// Converts Ordnance Survey 'OS Terrdata 50' ASCII data to a binary format
+// Converts Ordnance Survey 'OS Terrain 50' ASCII data to a binary format
 
 // Args are either:
 // - an OS data zip file containing the zipped elevation data, or

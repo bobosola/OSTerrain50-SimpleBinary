@@ -56,13 +56,13 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
 
         // Calculate the numeric part of data file name for each of the possible data files
         // ordered from E to W and N to S (e.g. xx00, xx10, xx20 ... xx79, xx89, xx99)
-        let mut file_identifers: Vec<String> = Vec::new();
+        let mut file_identifiers: Vec<String> = Vec::new();
         for northing in 0..os::ROWS_IN_10_GRID {
             for easting in 0..os::ROWS_IN_10_GRID {
-                file_identifers.push(format!("{}{}", easting, northing))
+                file_identifiers.push(format!("{}{}", easting, northing))
             }
         }
-        for file_num in file_identifers {
+        for file_num in file_identifiers {
             // Combine with the directory name (to get e.g. hp01)
             let file_name = format!("{}{}", dir_name, file_num);
 
@@ -83,7 +83,7 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
             // They start with some metadata lines then have 200 data rows each
             // containing 200 elevations.
 
-            // The data rows in each file are suppled N to S and W to E
+            // The data rows in each file are supplied N to S and W to E
             // These must be reversed to be stored as S to N while remaining W to E
 
             // NB: various crates were tried here (e.g. CSV and more) but none easily

@@ -42,5 +42,5 @@ pub const OS_DATA_SEPARATOR: &str = " "; // Elevation data separator in data row
 pub const ELEVATIONS_PER_ROW: usize = 200; // No. of elevation values in each data row (and column)
 pub const MAX_NUM_DATA_FILES: i64 = 100; // Maximum number of data files per 10km² grid
 pub const ROWS_IN_10_GRID: i64 = 10; // No. of files per row (and column) per 10km² grid
-pub const GRID_IDENT_LEN: i64 = 2; // Length of a grid identifer ("SV" etc.)
+pub const GRID_IDENT_LEN: i64 = 2; // Length of a grid identifier ("SV" etc.)
 pub const ADDRESS_LENGTH: i64 = 4; // Length of data addresses stored in the output file
