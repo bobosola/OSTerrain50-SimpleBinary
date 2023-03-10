@@ -1,4 +1,4 @@
-use std::{error::Error, path, process, string};
+use std::{error::Error, path, process, string, env};
 
 /***********************************************************************
    Utility functions
@@ -14,10 +14,19 @@ pub fn get_parent_dir(path: &path::Path) -> Result<path::PathBuf, Box<dyn Error>
         if p.is_dir() {
             return Ok(p.to_path_buf());
         }
+        else {
+            // The data file path (passed as arg to the executable)
+            // is just a single file name, so return the current 
+            // executing directory parent
+            if let Some(p) = env::current_exe()?.parent() {
+                if p.is_dir() {
+                    return Ok(p.to_path_buf());
+                }
+            }
+        }
     }
     Err("Could not get parent directory".into())
 }
-
 // Formats an integer with commas for readability
 pub fn format_int(int_to_fix: isize) -> string::String {
     let mut output = String::new();
