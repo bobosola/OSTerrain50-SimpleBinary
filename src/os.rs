@@ -1,5 +1,5 @@
 /*
-    The full data grid has 7 columns x 13 rows = 91 grids which might potentially contain data.
+    The full Great Britain OS data grid has 7 columns x 13 rows = 91 grids which might potentially contain data.
     However only 55 currently have data as shown below:
 
     |--------------|-----|
@@ -36,7 +36,6 @@ pub const GRID_100: [&str; 91] = [
 pub const FILE_SIG: &[u8; 11] = b"OSTerrain50"; // Identifying file signature at start of output file
 pub const OUTPUT_FILE_NAME: &str = "OSTerrain50.bin"; // Name of the binary data output file
 pub const FILE_SUFFIX: &str = ".asc"; // OS data file suffix
-pub const INNER_DATA_DIR: &str = "data"; // The single child directory of the top data directory
 pub const OS_NEW_LINE: &str = "\r\n"; // Data row separator in data files
 pub const OS_DATA_SEPARATOR: &str = " "; // Elevation data separator in data rows
 pub const ELEVATIONS_PER_ROW: usize = 200; // No. of elevation values in each data row (and column)

@@ -213,7 +213,7 @@ fn get_infills(coord_start: OSCoords, coord_end: OSCoords, include_start: bool) 
     }
 
     // NB: work in floats for cumulative calcs to avoid rounding
-    // innaccuracies which become noticeable over long distances
+    // inaccuracies which become noticeable over long distances
 
     // Get the diagonal difference between the start and end coords
     let easting_diff = coord_end.easting - coord_start.easting;
@@ -237,7 +237,7 @@ fn get_infills(coord_start: OSCoords, coord_end: OSCoords, include_start: bool) 
             elevation: None,
         };
 
-        // Cumulativley add the delta_east & delta_north diffs
+        // Cumulatively add the delta_east & delta_north diffs
         // to create the required number of infill coords
 
         // Begin with the start location
@@ -394,4 +394,16 @@ fn get_full_coord_pair(str_pair: Vec<String>) -> OSCoords {
         }
     }
     coords
+}
+
+// Gets the difference between two elevations (used for integration testing)
+pub fn get_elev_diff(published_elev:f32, coords:&str, data_file:&str) -> f32 {
+    let mut found_elev:f32 = 0.0;
+    let clean_coords = parse_coords(&[coords]);
+    if let Ok(coord_list) = read_elevations(data_file, &clean_coords, false) {
+        if let Some(e) = coord_list[0].elevation {
+            found_elev = e;
+        }
+    }
+    f32::abs(published_elev - found_elev)
 }

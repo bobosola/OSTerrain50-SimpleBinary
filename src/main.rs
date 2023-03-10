@@ -3,15 +3,16 @@ mod output;
 mod unzip;
 mod utils;
 
-use std::error::Error;
 use std::time::Instant;
-use std::{env, path, string};
+use std::{error::Error, env, path, string};
 
-// Converts Ordnance Survey 'OS Terrain 50' ASCII data to a binary format
+/****************************************************************************************
+   Converts Ordnance Survey 'OS Terrain 50' ASCII files data to a single binary format
 
-// Args are either:
-// - an OS data zip file containing the zipped elevation data, or
-// - a directory containing already-unzipped elevation data
+   Args are either:
+     - an OS data zip file containing the zipped elevation data, or
+     - a directory containing already-unzipped elevation data
+****************************************************************************************/
 
 struct ArgsTypes {
     zip_file: Option<path::PathBuf>,
@@ -25,6 +26,7 @@ fn main() {
     // Sanity-check the supplied args
     match args_check(&args) {
         Ok(args) => {
+            
             // If it's a zip file, unzip it in its parent directory
             // and return the path to the unzipped files directory
             let mut data_dir = path::PathBuf::new();
@@ -72,7 +74,7 @@ fn args_check(args: &[string::String]) -> Result<ArgsTypes, Box<dyn Error>> {
         }
     }
 
-    if args_types.directory == None && args_types.zip_file == None {
+    if args_types.directory.is_none() && args_types.zip_file.is_none() {
         show_args_usage(&args[0])?;
         return Err("Invalid or missing argument".into());
     }

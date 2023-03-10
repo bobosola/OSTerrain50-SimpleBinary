@@ -2,7 +2,9 @@ use crate::utils;
 use std::{error::Error, fs, io, path};
 use walkdir::WalkDir;
 
-// Code for handling zip files
+/***********************************************************************
+   Code for handling zip files
+************************************************************************/
 
 pub fn unzip_os_file(
     file_path: &path::Path,
@@ -10,9 +12,7 @@ pub fn unzip_os_file(
 ) -> Result<path::PathBuf, Box<dyn Error>> {
     println!(
         "Extracting {}.",
-        file_path
-            .to_str()
-            .ok_or("Zip file path is an invalid string")?
+        file_path.to_str().ok_or("Zip file path is an invalid string")?
     );
     let unzipped_top_dir = unzip(file_path, target_dir)?;
 
@@ -24,7 +24,7 @@ pub fn unzip_os_file(
 }
 
 fn unzip(source: &path::Path, target_dir: &path::Path) -> Result<path::PathBuf, Box<dyn Error>> {
-    let file = fs::File::open(&source)?;
+    let file = fs::File::open(source)?;
     let mut archive = zip::ZipArchive::new(file)?;
     let mut top_dir = path::PathBuf::new();
 
@@ -33,7 +33,7 @@ fn unzip(source: &path::Path, target_dir: &path::Path) -> Result<path::PathBuf, 
         // so check any such path is valid, otherwise ignore
         let mut entry = archive.by_index(i)?;
         let outpath = match entry.enclosed_name() {
-            Some(p) => target_dir.join(p.to_owned()),
+            Some(p) => target_dir.join(p),
             None => continue,
         };
 
@@ -43,13 +43,13 @@ fn unzip(source: &path::Path, target_dir: &path::Path) -> Result<path::PathBuf, 
         }
 
         // Create any specified directory entries
-        if (&*entry.name()).ends_with('/') {
+        if (entry.name()).ends_with('/') {
             fs::create_dir_all(&outpath)?;
         } else {
             // Create a file entry's parent directories
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
-                    fs::create_dir_all(&p)?;
+                    fs::create_dir_all(p)?;
                 }
             }
 

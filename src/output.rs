@@ -1,11 +1,11 @@
 use crate::os;
 use crate::utils;
-use std::collections::HashMap;
-use std::error::Error;
 use std::io::{BufWriter, Seek, SeekFrom, Write};
-use std::{fs, path, str};
+use std::{error::Error, collections::HashMap, fs, path, str};
 
-// Code for writing the OS binary file
+/***********************************************************************
+    Code for writing the OS binary file
+************************************************************************/
 
 pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn Error>> {
     // Create the output file in the same directory as the data parent directory
@@ -25,7 +25,7 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
     // Write the file signature
     file_buffer.write_all(os::FILE_SIG)?;
 
-    // Write the grid identifiers followed by enough space for the maximimum possible
+    // Write the grid identifiers followed by enough space for the maximum possible
     // number of data addresses (to be populated later).
     for grid in os::GRID_100.iter() {
         file_buffer.write_all(grid.as_bytes())?;
@@ -45,9 +45,7 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
         let dir_name = &grid.to_lowercase();
 
         // Create the full path to the data directory
-        let match_dir = data_dir
-            .join(path::Path::new(&os::INNER_DATA_DIR))
-            .join(dir_name);
+        let match_dir = data_dir.join(dir_name);
 
         // Check the directory exists. No directory means no elevation data for this 100km² grid.
         if !match_dir.is_dir() {
@@ -76,7 +74,7 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
 
             // Save the file name (e.g. HP00) along with the current offset address
             // for later use when back-filling the header section
-            let file_pointer = file_buffer.seek(SeekFrom::Current(0))?;
+            let file_pointer = file_buffer.stream_position()?;
             offsets.insert(file_name.to_uppercase(), file_pointer);
 
             // Each data file is a CSV-like format using spaces instead of commas.
@@ -107,12 +105,12 @@ pub fn build_output_file(data_dir: &path::Path) -> Result<path::PathBuf, Box<dyn
                 for elevation in elevations {
                     // Elevation values have either no decimal place or one, so multiply
                     // all values by 10 to enable storage as i16 rather than f32.
-                    let str_val_x10: String;
+                    let str_val_x10: String =
                     if elevation.contains('.') {
-                        str_val_x10 = elevation.replace('.', "");
+                        elevation.replace('.', "")
                     } else {
-                        str_val_x10 = format!("{}{}", elevation, "0");
-                    }
+                        format!("{}{}", elevation, "0")
+                    };
 
                     // Write the x10 value as a signed 16 bit little endian integer
                     let i16_bytes = str_val_x10.parse::<i16>()?.to_le_bytes();
