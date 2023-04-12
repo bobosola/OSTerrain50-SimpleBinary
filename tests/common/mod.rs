@@ -36,25 +36,25 @@ use std::path;
 */
 
 // British National Grid
-const GRIDS_PER_ROW_100: i64 = 7;         // No. of grids per row in the full 91 grid block
-const METRES_IN_500_GRID: i64 = 500_000;  // No of metres in 500 Km² grid E & N
-const METRES_IN_100_GRID: i64 = 100_000;  // No of metres in 100 Km² grid E & N
-const METRES_IN_10_GRID: i64 = 10_000;    // No of metres in 10 Km² grid E & N
-const DATA_COLS_IN_10_GRID: i64 = 10;     // No. of columns in a 10km² grid
+const GRIDS_PER_ROW_100: i64 = 7; // No. of grids per row in the full 91 grid block
+const METRES_IN_500_GRID: i64 = 500_000; // No of metres in 500 Km² grid E & N
+const METRES_IN_100_GRID: i64 = 100_000; // No of metres in 100 Km² grid E & N
+const METRES_IN_10_GRID: i64 = 10_000; // No of metres in 10 Km² grid E & N
+const DATA_COLS_IN_10_GRID: i64 = 10; // No. of columns in a 10km² grid
 
 // Data file sig
 const FILE_SIG: &[u8; 11] = b"OSTerrain50";
 
 // Data file header section
-const MAX_NUM_DATA_FILES: i64 = 100;      // Maximum number of data files per 10km² grid
-const GRID_IDENT_LEN: i64 = 2;            // Length of a grid identifer ("SV" etc.)
-const ADDRESS_LENGTH: i64 = 4;            // Length of data addresses stored in the output file
+const MAX_NUM_DATA_FILES: i64 = 100; // Maximum number of data files per 10km² grid
+const GRID_IDENT_LEN: i64 = 2; // Length of a grid identifer ("SV" etc.)
+const ADDRESS_LENGTH: i64 = 4; // Length of data addresses stored in the output file
 const HEADER_BLOCK_LENGTH: i64 = GRID_IDENT_LEN + (MAX_NUM_DATA_FILES * ADDRESS_LENGTH);
 
 // Data file data section
-const ELEVATIONS_PER_COL: i64 = 200;      // No. of elevation values in each data column
-const ELEVATION_DATA_LENGTH: i64 = 2;     // Length of a single elvation data point
-const ELEVATION_DISTANCE: i64 = 50;       // Distance between successive elevations points
+const ELEVATIONS_PER_COL: i64 = 200; // No. of elevation values in each data column
+const ELEVATION_DATA_LENGTH: i64 = 2; // Length of a single elvation data point
+const ELEVATION_DISTANCE: i64 = 50; // Distance between successive elevations points
 
 #[derive(Debug, Clone, Copy)]
 pub struct OSCoords {
@@ -68,7 +68,6 @@ pub fn read_elevations(
     coords_list: &[OSCoords],
     infill: bool,
 ) -> Result<Vec<OSCoords>, Box<dyn Error>> {
-
     // Returns a vec of the supplied coordinates with the elevation provided for each coordinate.
     // Optionally creates infill coordinates and elevations at approx. 50m intervals between
     // each coordinate pair.
@@ -90,7 +89,7 @@ pub fn read_elevations(
                 }
                 let infills = get_infills(coords_list[i - 1], coords_list[i], include_start);
                 // Merge the results
-                coords.extend(infills);               
+                coords.extend(infills);
             }
         }
     } else {
@@ -106,7 +105,6 @@ pub fn read_elevations(
     let mut reader = BufReader::new(file);
 
     for i in 0..coords.len() {
-
         // Work out how many grid blocks to jump over in the file header section.
         // NB: uses integer division to deliberately truncate the remainders - use floor(),
         // trunc() etc. in untyped languages
@@ -155,7 +153,6 @@ pub fn read_elevations(
         // a little endian address value
         let data_block_address = u32::from_le_bytes(address_buffer) as u64;
         if data_block_address != 0 {
-
             // Apply the required elevation data offset to the data block address
             // and jump there
             let elev_addr = data_block_address + elevation_offset;
@@ -169,9 +166,8 @@ pub fn read_elevations(
             // as 10x actual value as little endian i16 for space-efficient storage
             let elev_x10 = i16::from_le_bytes(elevation_buffer);
             coords[i].elevation = Some(elev_x10 as f32 / 10f32);
-        }
-        else {
-            // No data address means no data exists for this location, i.e. it's a 
+        } else {
+            // No data address means no data exists for this location, i.e. it's a
             // sea area or an out-of-scope land mass, e.g. the Isle of Man
             coords[i].elevation = Some(0 as f32);
         }
@@ -180,19 +176,18 @@ pub fn read_elevations(
 }
 
 fn get_infills(coord_start: OSCoords, coord_end: OSCoords, include_start: bool) -> Vec<OSCoords> {
-
     /*
        Creates infill locations approx. 50m apart between the two parameter locations
 
        The include_start parameter controls whether the start is included in the output
        in order to avoid double insertions when later merging infilled locations
-       
+
        Example: for 4 locations requiring infills:
        1---2               get_infills(1, 2, true)  returns 1st, infills & 2nd location
            ---3            get_infills(2, 3, false) returns infills & 3rd location
                ---4        get_infills(3, 4, false) returns infills & 4th location
         so merging the three results contains all 4 locations and no duplicates
- 
+
        Example: for 2 locations where start and end are 200m apart:
                                • end
                            •   |
@@ -223,7 +218,6 @@ fn get_infills(coord_start: OSCoords, coord_end: OSCoords, include_start: bool) 
 
     // Only create infills where the two locations are greater than 50m apart
     if diagonal_diff > ELEVATION_DISTANCE as f64 {
-
         // Get the infill easting & northing deltas
         // as a proportion of the infill diagonal diff
         let infill_diag_diff = diagonal_diff / ELEVATION_DISTANCE as f64;
@@ -244,12 +238,11 @@ fn get_infills(coord_start: OSCoords, coord_end: OSCoords, include_start: bool) 
         let mut cumulative_east = coord_start.easting as f64;
         let mut cumulative_north = coord_start.northing as f64;
 
-        // Get the number of infills required   
+        // Get the number of infills required
         let infills_required = infill_diag_diff.ceil() as i64 - 1;
 
         // Create the infill locations
         for _ in 0..infills_required {
-
             cumulative_east += delta_east;
             cumulative_north += delta_north;
 
@@ -264,7 +257,6 @@ fn get_infills(coord_start: OSCoords, coord_end: OSCoords, include_start: bool) 
 }
 
 pub fn parse_coords(input: &[&str]) -> Vec<OSCoords> {
-
     // Converts variously-styled input coordinates
     // to full grid origin coordinate pairs
 
@@ -272,23 +264,51 @@ pub fn parse_coords(input: &[&str]) -> Vec<OSCoords> {
 
     // Conversion multipliers for 500 Km² grid as [e, n]
     let grid_500: HashMap<&str, [i64; 2]> = [
-        ("S", [0, 0]), ("T", [1, 0]),
-        ("N", [0, 1]), ("O", [1, 1]),
-        ("H", [0, 2]), ("J", [1, 2]),
-    ].iter().cloned().collect();
+        ("S", [0, 0]),
+        ("T", [1, 0]),
+        ("N", [0, 1]),
+        ("O", [1, 1]),
+        ("H", [0, 2]),
+        ("J", [1, 2]),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     // Conversion multipliers for 100 Km² grid as [e, n]
     // NB: 'I' is not used
     let grid_100: HashMap<&str, [i64; 2]> = [
-        ("V", [0, 0]), ("W", [1, 0]), ("X", [2, 0]), ("Y", [3, 0]), ("Z", [4, 0]),
-        ("Q", [0, 1]), ("R", [1, 1]), ("S", [2, 1]), ("T", [3, 1]), ("U", [4, 1]),
-        ("L", [0, 2]), ("M", [1, 2]), ("N", [2, 2]), ("O", [3, 2]), ("P", [4, 2]),
-        ("F", [0, 3]), ("G", [1, 3]), ("H", [2, 3]), ("J", [3, 3]), ("K", [4, 3]),
-        ("A", [0, 4]), ("B", [1, 4]),( "C", [2, 4]), ("D", [3, 4]), ("E", [4, 4]),
-    ].iter().cloned().collect();
+        ("V", [0, 0]),
+        ("W", [1, 0]),
+        ("X", [2, 0]),
+        ("Y", [3, 0]),
+        ("Z", [4, 0]),
+        ("Q", [0, 1]),
+        ("R", [1, 1]),
+        ("S", [2, 1]),
+        ("T", [3, 1]),
+        ("U", [4, 1]),
+        ("L", [0, 2]),
+        ("M", [1, 2]),
+        ("N", [2, 2]),
+        ("O", [3, 2]),
+        ("P", [4, 2]),
+        ("F", [0, 3]),
+        ("G", [1, 3]),
+        ("H", [2, 3]),
+        ("J", [3, 3]),
+        ("K", [4, 3]),
+        ("A", [0, 4]),
+        ("B", [1, 4]),
+        ("C", [2, 4]),
+        ("D", [3, 4]),
+        ("E", [4, 4]),
+    ]
+    .iter()
+    .cloned()
+    .collect();
 
     for coord in input {
-
         let mut coords = OSCoords {
             easting: 0,
             northing: 0,
@@ -365,7 +385,6 @@ pub fn parse_coords(input: &[&str]) -> Vec<OSCoords> {
 }
 
 fn get_full_coord_pair(str_pair: Vec<String>) -> OSCoords {
-
     // Converts a vec of two numeric strings to five digit coordinates
 
     if str_pair.len() != 2 {
@@ -397,8 +416,8 @@ fn get_full_coord_pair(str_pair: Vec<String>) -> OSCoords {
 }
 
 // Gets the difference between two elevations (used for integration testing)
-pub fn get_elev_diff(published_elev:f32, coords:&str, data_file:&str) -> f32 {
-    let mut found_elev:f32 = 0.0;
+pub fn get_elev_diff(published_elev: f32, coords: &str, data_file: &str) -> f32 {
+    let mut found_elev: f32 = 0.0;
     let clean_coords = parse_coords(&[coords]);
     if let Ok(coord_list) = read_elevations(data_file, &clean_coords, false) {
         if let Some(e) = coord_list[0].elevation {
