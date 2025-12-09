@@ -48,7 +48,7 @@ The binary data file consists of:
 
 Addresses and elevation values are stored in little-endian byte order.
 
-The elevation data is in metres. It is supplied in the OS ASCII data files either as a whole number or as a decimal value to one decimal place up to a maximum value of 1345m at [Ben Nevis](https://getoutside.ordnancesurvey.co.uk/local/ben-nevis-highland). Coastal waterline values vary (see the [OS User Guide](https://www.ordnancesurvey.co.uk/documents/product-support/user-guide/os-terrain-50-user-guide.pdf) for more information on this) so small negative coastline values of e.g. -1.5m may be found.
+The elevation data is in metres. It is supplied in the OS ASCII data files either as a whole number or as a decimal value to one decimal place up to a maximum value of 1345m at [Ben Nevis](https://getoutside.ordnancesurvey.co.uk/local/ben-nevis-highland). Coastal waterline values vary (see the [OS Terrain 50 documentation](https://docs.os.uk/os-downloads/height-and-imagery/os-terrain-50) for more information on this) so small negative coastline values of e.g. -1.5m may be found.
 
 So for storage efficiency, all OS elevation values have been multiplied by 10 to allow for storage as 16 bit integers rather than floats. This approach requires half the storage space of floats while maintaining full data accuracy. All retrieved raw values must therefore be divided by 10 in your code before use. 16 bit half floats were also considered for storage purposes, but were rejected because they [run out of decimal place accuracy](https://en.wikipedia.org/wiki/Half-precision_floating-point_format#Precision_limitations_on_decimal_values_in_[1,_2048]) for this use case and are also not supported in many languages.
 
