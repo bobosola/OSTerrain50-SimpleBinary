@@ -1,6 +1,6 @@
 # OS Terrain 50 Simple Binary Data
 
-This repo contains Rust code to build a command-line application which produces a simple efficient binary elevation data file from the freely-available ASCII [Ordnance Survey OS Terrain 50](https://www.ordnancesurvey.co.uk/business-government/products/terrain-50) data set. This allows for very fast reading of elevation data for all of Great Britain.
+This repo contains Rust code to build a command-line application which produces a simple efficient binary elevation data file from the freely-available ASCII [Ordnance Survey OS Terrain 50](https://www.ordnancesurvey.co.uk/products/os-terrain-50) data set. This allows for very fast reading of elevation data for all of Great Britain.
 
 Why Rust? Because it produces small, cross-platform, very high performance native executables with the minimum of fuss.
 
