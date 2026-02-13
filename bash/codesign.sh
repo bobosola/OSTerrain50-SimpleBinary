@@ -60,10 +60,9 @@ IMG_VOL_NAME="OSTerrain50"
 # Sign the binary (force overwrite, verbose, harden with '-o runtime', and add a timestamp)
 printf "\nSign the binary ....\n"
 codesign -s "$CERT" -fv -o runtime --timestamp "$APP" 
-printf "Binary signed ....\n\n"
 
 # Check the binary is signed
-printf "Check the signing ....\n"
+printf "\nCheck the signing ....\n"
 codesign -dv --verbose $APP
 
 # Create the DMG with the signed binary inside it
@@ -78,7 +77,7 @@ codesign -s "$CERT" -fv --timestamp -i "$BUNDLE_ID" "$IMG_DEST"
 printf "\nCheck the signing ....\n"
 codesign -dv --verbose "$IMG_DEST"
 
-# Notarise the DMG (this also notarizes all content inside it)
+# Notarise the DMG (also notarizes all content inside it)
 printf "\nNotarize the DMG ....\n"
 xcrun notarytool submit "$IMG_DEST" --keychain-profile "NOTARYTOOL_PASSWORD" --wait
 
